@@ -94,10 +94,10 @@ public class InventoryManager {
             if(!tableExistsResultSet.next()) {
                 this.con.setAutoCommit(false);
 
-                PreparedStatement createAccountsTable = this.con.prepareStatement("CREATE TABLE IF NOT EXISTS \"+this.TBL_ACCOUNTS+\" (  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,  `uuid` VARCHAR(36) NOT NULL,  `username` VARCHAR(16) NOT NULL,  PRIMARY KEY (`id`),  UNIQUE INDEX `uuid_UNIQUE` (`uuid` ASC))ENGINE = InnoDB;");
+                PreparedStatement createAccountsTable = this.con.prepareStatement("CREATE TABLE IF NOT EXISTS "+this.TBL_ACCOUNTS+" (  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,  `uuid` VARCHAR(36) NOT NULL,  `username` VARCHAR(16) NOT NULL,  PRIMARY KEY (`id`),  UNIQUE INDEX `uuid_UNIQUE` (`uuid` ASC))ENGINE = InnoDB;");
                 createAccountsTable.execute();
                 
-                PreparedStatement createItemsTable = this.con.prepareStatement("CREATE TABLE IF NOT EXISTS \"+this.TBL_ITEMS+\" (  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,  `seller_id` INT UNSIGNED NOT NULL,  `material` INT UNSIGNED NOT NULL,  `data` INT UNSIGNED NOT NULL,  `amount` INT UNSIGNED NOT NULL,  `item_data` TEXT NOT NULL,  `posted` DATETIME NOT NULL,  `price` DECIMAL(13,2) UNSIGNED NOT NULL,  `price_per_item` DECIMAL(13,2) UNSIGNED NOT NULL,  PRIMARY KEY (`id`),  INDEX `fk_items_seller_id_idx` (`seller_id` ASC),  INDEX `material` (`material` ASC),  CONSTRAINT `fk_items_seller_id`    FOREIGN KEY (`seller_id`)    REFERENCES "+this.TBL_ACCOUNTS+" (`id`)    ON DELETE NO ACTION    ON UPDATE NO ACTION)ENGINE = InnoDB;");
+                PreparedStatement createItemsTable = this.con.prepareStatement("CREATE TABLE IF NOT EXISTS "+this.TBL_ITEMS+" (  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,  `seller_id` INT UNSIGNED NOT NULL,  `material` INT UNSIGNED NOT NULL,  `data` INT UNSIGNED NOT NULL,  `amount` INT UNSIGNED NOT NULL,  `item_data` TEXT NOT NULL,  `posted` DATETIME NOT NULL,  `price` DECIMAL(13,2) UNSIGNED NOT NULL,  `price_per_item` DECIMAL(13,2) UNSIGNED NOT NULL,  PRIMARY KEY (`id`),  INDEX `fk_items_seller_id_idx` (`seller_id` ASC),  INDEX `material` (`material` ASC),  CONSTRAINT `fk_items_seller_id`    FOREIGN KEY (`seller_id`)    REFERENCES "+this.TBL_ACCOUNTS+" (`id`)    ON DELETE NO ACTION    ON UPDATE NO ACTION)ENGINE = InnoDB;");
                 createItemsTable.execute();
 
                 this.con.commit();
@@ -149,10 +149,11 @@ public class InventoryManager {
                 }
             }
             else {
-                PreparedStatement createPlayerAccount = this.con.prepareStatement("INSERT INTO "+this.TBL_ACCOUNTS+"(uuid) VALUES(?);",
+                PreparedStatement createPlayerAccount = this.con.prepareStatement("INSERT INTO "+this.TBL_ACCOUNTS+"(uuid,username) VALUES(?,?);",
                     Statement.RETURN_GENERATED_KEYS);
                 
                 createPlayerAccount.setString(1, uuid.toString());
+                createPlayerAccount.setString(2, player.getName());
                 
                 dbID = createPlayerAccount.executeUpdate();
                 username = player.getName();
@@ -174,11 +175,13 @@ public class InventoryManager {
             
             ResultSet result = getSellerAccount.executeQuery();
             
-            String username = result.getString("username");
-            int dbID = result.getInt("id");
-            UUID uuid = UUID.fromString(result.getString("uuid"));
-            
-            return new PlayerInventoryAccount(dbID,uuid,username);
+            if(result.next()){
+                String username = result.getString("username");
+                int dbID = result.getInt("id");
+                UUID uuid = UUID.fromString(result.getString("uuid"));
+
+                return new PlayerInventoryAccount(dbID,uuid,username);
+            }
         }
         catch (SQLException ex) {
             Logger.getLogger(InventoryManager.class.getName()).log(Level.SEVERE, null, ex);
@@ -220,7 +223,7 @@ public class InventoryManager {
         }
         
         try {
-            PreparedStatement getPlayerItemsCount = this.con.prepareStatement("SELECT COUNT(*) as playerItems FROM "+this.TBL_ITEMS+" WHERE player_account = ?");
+            PreparedStatement getPlayerItemsCount = this.con.prepareStatement("SELECT COUNT(*) as playerItems FROM "+this.TBL_ITEMS+" WHERE seller_id = ?");
             
             getPlayerItemsCount.setInt(1, pia.getdbId());
             
@@ -243,12 +246,12 @@ public class InventoryManager {
         
         try {
             PreparedStatement createPlayerItem = this.con.prepareStatement("INSERT INTO "+this.TBL_ITEMS
-                    +"(player_account,seller_uuid,material,amount,item_data,posted,price,price_per_item) "
+                    +"(seller_id,material,data,amount,item_data,posted,price,price_per_item) "
                     +"VALUES(?,?,?,?,?,?,?,?);");
             
             createPlayerItem.setInt(1, pia.getdbId());
-            createPlayerItem.setString(2, player.getUniqueId().toString());
-            createPlayerItem.setInt(3, inHand.getTypeId());
+            createPlayerItem.setInt(2, inHand.getTypeId());
+            createPlayerItem.setInt(3, inHand.getData().getData());
             createPlayerItem.setInt(4, inHand.getAmount());
             createPlayerItem.setString(5, ItemStackConvertor.fromItemStack(inHand));
             createPlayerItem.setTimestamp(6, new java.sql.Timestamp(new java.util.Date().getTime()));
@@ -264,14 +267,24 @@ public class InventoryManager {
 
         return new InventoryActionResponse(inHand,true,"Item successfully put for sale!");
     }
-
+    
+    public ArrayList<ItemForSale> getItemsForSale() {
+        return this.getItemsForSale("");
+    }
+    
     public ArrayList<ItemForSale> getItemsForSale(Material material) {
+        return this.getItemsForSale("WHERE material = "+material.getId());
+    }
+    
+    public ArrayList<ItemForSale> getItemsForSale(Material material,byte data) {
+        return this.getItemsForSale("WHERE material = "+material.getId()+" AND data = "+data);
+    }
+    
+    private ArrayList<ItemForSale> getItemsForSale(String queryWhere) {
         ArrayList<ItemForSale> items = new ArrayList<>();
         
         try {
-            PreparedStatement getItemsForSale = this.con.prepareStatement("SELECT id,amount,item_data,posted,price,price_per_item FROM "+this.TBL_ITEMS+" WHERE material = ? ORDER BY price_per_item,posted LIMIT "+plugin.shopsManager.getMaxShopSlots());
-            getItemsForSale.setInt(1, material.getId());
-            
+            PreparedStatement getItemsForSale = this.con.prepareStatement("SELECT id,amount,item_data,posted,price,price_per_item FROM "+this.TBL_ITEMS+" "+queryWhere+" ORDER BY price_per_item,posted LIMIT "+plugin.shopsManager.getMaxShopSlots());            
             ResultSet result = getItemsForSale.executeQuery();
             
             while(result.next()) {
@@ -317,7 +330,7 @@ public class InventoryManager {
         
         return null;
     }
-    
+
     public InventoryActionResponse attemptToBuy(Player player, int itemId) {
         ItemForSale ifs = this.getItemForSale(itemId);
         

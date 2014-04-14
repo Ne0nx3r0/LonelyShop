@@ -6,6 +6,7 @@
 #     citizen: 20
 #
 sell_limits:
+    newbie: 10
     citizen: 30
     regular: 60
     veteran: 120

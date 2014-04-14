@@ -23,6 +23,8 @@ class CommandBuy extends LonelyCommand {
             
             return true;
         }
+        
+        Player player = (Player) cs;
                 
         if(args.length < 2)
         {
@@ -33,6 +35,20 @@ class CommandBuy extends LonelyCommand {
         
         String sMaterial = args[1];
         
+        // /buy *
+        if(sMaterial.equals("*")) {
+            ArrayList<ItemForSale> items = plugin.inventoryManager.getItemsForSale();
+
+            if(items.isEmpty()) {
+                this.sendError(cs, "There is no "+sMaterial+" for sale currently!");
+            }
+            else {
+                plugin.shopsManager.openShopInventory(player,items);
+            }
+            
+            return true;
+        }
+        
         Material material = Material.matchMaterial(sMaterial);
         
         if(material == null){
@@ -41,12 +57,38 @@ class CommandBuy extends LonelyCommand {
             return true;
         }
         
-        Player player = (Player) cs;
+        // buy <material>
+        if(args.length == 2) {
+            ArrayList<ItemForSale> items = plugin.inventoryManager.getItemsForSale(material);
 
-        ArrayList<ItemForSale> items = plugin.inventoryManager.getItemsForSale(material);
+            if(items.isEmpty()) {
+                this.sendError(cs, "There is no "+sMaterial+" for sale currently!");
+
+                return true;
+            }
+
+            plugin.shopsManager.openShopInventory(player,items);
+        }
+ 
+        byte data = 0;
+        
+        if(args.length > 2){
+            String sData = args[2];
+            
+            try {
+                data = Byte.parseByte(sData);
+            }
+            catch(NumberFormatException ex){
+                this.sendError(cs, sData+" is not a valid data!");
+                
+                return true;
+            }
+        }
+
+        ArrayList<ItemForSale> items = plugin.inventoryManager.getItemsForSale(material,data);
         
         if(items.isEmpty()) {
-            this.sendError(cs, "There is no "+sMaterial+" for sale currently!");
+            this.sendError(cs, "There is no "+sMaterial+"("+data+") for sale currently!");
             
             return true;
         }
