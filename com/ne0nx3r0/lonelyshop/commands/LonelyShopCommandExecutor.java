@@ -1,7 +1,10 @@
 package com.ne0nx3r0.lonelyshop.commands;
 
 import com.ne0nx3r0.lonelyshop.LonelyShopPlugin;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -19,12 +22,32 @@ public class LonelyShopCommandExecutor implements CommandExecutor {
     }
 
     @Override
-    public boolean onCommand(CommandSender cs, Command cmnd, String alias, String[] args) {
+    public boolean onCommand(CommandSender cs, Command cmnd, String alias, String[] args) {  
         if(args.length == 0 || args[0].equals("?")) {
             this.sendUsage(cs);
             
             return true;
         }
+        
+        // I dunno man. I'm just hard coding these two. /ls sell and /ls buy are really irritating.
+        if(cmnd.getName().equalsIgnoreCase("buy")) {
+            List<String> lArgs = new ArrayList<>();
+            
+            lArgs.add("buy");
+            
+            lArgs.addAll(Arrays.asList(args));
+            
+            args = lArgs.toArray(new String[lArgs.size()]);
+        }   
+        else if(cmnd.getName().equalsIgnoreCase("sell")) {
+            List<String> lArgs = new ArrayList<>();
+            
+            lArgs.add("sell");
+            
+            lArgs.addAll(Arrays.asList(args));
+            
+            args = lArgs.toArray(new String[lArgs.size()]);
+        }      
 
         LonelyCommand lonelyCommand = this.subCommands.get(args[0]);
         

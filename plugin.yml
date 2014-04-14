@@ -7,6 +7,10 @@ depend: [Vault]
 commands:
     ls:
       description: Lonely shop commands
+    buy:
+      description: Lonely shop buy command
+    sell:
+      description: Lonely shop sell command
 permissions:
   lonelyshop.buy:
     description: can buy items from lonelyshop

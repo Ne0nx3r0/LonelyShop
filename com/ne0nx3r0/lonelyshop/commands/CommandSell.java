@@ -75,4 +75,10 @@ class CommandSell extends LonelyCommand {
         
         return true;
     }
+    
+    // Not everything fits into your happy little formatting box man!
+    @Override
+    public String getUsage() {
+        return "/sell <price>";
+    }
 }

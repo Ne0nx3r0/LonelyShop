@@ -48,6 +48,8 @@ public class LonelyShopPlugin extends JavaPlugin {
         this.shopsManager = new ShopsManager(this);
         
         this.getCommand("ls").setExecutor(new LonelyShopCommandExecutor(this));
+        this.getCommand("sell").setExecutor(new LonelyShopCommandExecutor(this));
+        this.getCommand("buy").setExecutor(new LonelyShopCommandExecutor(this));
  
         this.getServer().getPluginManager().registerEvents(new ShopListener(this), this);
     }
