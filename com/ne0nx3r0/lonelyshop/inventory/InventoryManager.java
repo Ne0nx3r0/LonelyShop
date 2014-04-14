@@ -1,6 +1,7 @@
 package com.ne0nx3r0.lonelyshop.inventory;
 
 import com.ne0nx3r0.lonelyshop.LonelyShopPlugin;
+import com.ne0nx3r0.util.ItemStackConvertor;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -9,12 +10,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -23,15 +21,10 @@ import net.milkbowl.vault.economy.EconomyResponse;
 import net.milkbowl.vault.economy.EconomyResponse.ResponseType;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.LeatherArmorMeta;
-import org.bukkit.inventory.meta.SkullMeta;
 
 public class InventoryManager {
     private LonelyShopPlugin plugin;
@@ -257,7 +250,7 @@ public class InventoryManager {
             createPlayerItem.setString(2, player.getUniqueId().toString());
             createPlayerItem.setInt(3, inHand.getTypeId());
             createPlayerItem.setInt(4, inHand.getAmount());
-            createPlayerItem.setString(5, this.stringFromItemStack(inHand));
+            createPlayerItem.setString(5, ItemStackConvertor.fromItemStack(inHand));
             createPlayerItem.setTimestamp(6, new java.sql.Timestamp(new java.util.Date().getTime()));
             createPlayerItem.setDouble(7, price);
             createPlayerItem.setDouble(8, price / inHand.getAmount());
@@ -288,7 +281,7 @@ public class InventoryManager {
                 Date postedDate = result.getTimestamp("posted");
                 
                 String sItemData = result.getString("item_data");
-                ItemStack is = this.itemStackfromString(sItemData);
+                ItemStack is = ItemStackConvertor.fromString(sItemData);
                 
                 items.add(new ItemForSale(id,is,price,pricePerItem,postedDate));
             }
@@ -313,7 +306,7 @@ public class InventoryManager {
                 Date postedDate = result.getTimestamp("posted");
                 
                 String sItemData = result.getString("item_data");
-                ItemStack is = this.itemStackfromString(sItemData);
+                ItemStack is = ItemStackConvertor.fromString(sItemData);
                 
                 return new ItemForSale(itemId,is,price,pricePerItem,postedDate);
             }
@@ -376,105 +369,5 @@ public class InventoryManager {
         }
 
         return new InventoryActionResponse(null,false,buyerWithdrawlResponse.errorMessage);
-    }
-    
-    // helper
-    // TODO: Put into util class
-    public String stringFromItemStack(ItemStack is) {
-        StringBuilder f = new StringBuilder();
-        f.append("type=" + is.getType() + ";");
-        if (is.getDurability() != 0)
-           f.append("dura=" + is.getDurability() + ";");
-        f.append("amount=" + is.getAmount() + ";");
-        if (!is.getEnchantments().isEmpty()) {
-           f.append("enchantments=");
-           int in = 1;
-           for (Entry<Enchantment, Integer> key : is.getEnchantments().entrySet()) {
-              f.append(key.getKey().getName() + ":" + key.getValue());
-              if (in != is.getEnchantments().size()) {
-                 f.append("&");
-              }
-              in++;
-           }
-           f.append(";");
-        }
-        if (is.hasItemMeta()) {
-           ItemMeta m = is.getItemMeta();
-           if (m.hasDisplayName()) {
-              f.append("name=").append(m.getDisplayName()).append(";");
-           }
-           if (m instanceof LeatherArmorMeta) {
-              LeatherArmorMeta me = (LeatherArmorMeta) m;
-              int r = me.getColor().getRed();
-              int g = me.getColor().getGreen();
-              int b = me.getColor().getBlue();
-              f.append("rgb=").append(r).append(",").append(g).append(",").append(b);
-           }
-           if (m.hasLore()) {
-              f.append("lore=");
-              StringBuilder lore = new StringBuilder();
-              for (String s : m.getLore()) {
-                 lore.append("line:").append(s);
-              }
-              f.append(lore.toString().replaceFirst("line:", ""));
-           }
-           if (m instanceof SkullMeta) {
-              SkullMeta me = (SkullMeta) m;
-              if (me.hasOwner())
-                 f.append("owner=").append(me.getOwner());
-           }
-        }
-        return f.toString();
-    }
-    
-    public ItemStack itemStackfromString(String s) {
-      ItemStack i;
-      Material type = Material.AIR;
-      short dura = 0;
-      int amount = 1;
-      Map<Enchantment, Integer> enchants = new HashMap<Enchantment, Integer>();
-      String cName = null;
-      String[] rgb = null;
-      List<String> lore = new ArrayList<String>();
-      String owner = null;
-      for (String d : s.split(";")) {
-         String[] id = d.split("=");
-         if (id[0].equalsIgnoreCase("type")) {
-            type = Material.getMaterial(id[1]);
-         } else if (id[0].equalsIgnoreCase("dura")) {
-            dura = Short.parseShort(id[1]);
-         } else if (id[0].equalsIgnoreCase("amount")) {
-            amount = Integer.parseInt(id[1]);
-         } else if (id[0].equalsIgnoreCase("enchantments")) {
-            for (String en : id[1].split("&")) {
-               String[] ench = en.split(":");
-               enchants.put(Enchantment.getByName(ench[0]), Integer.parseInt(ench[1]));
-            }
-         } else if (id[0].equalsIgnoreCase("name")) {
-            cName = id[1];
-         } else if (id[0].equalsIgnoreCase("rgb")) {
-            rgb = id[1].split(",");
-         } else if (id[0].equalsIgnoreCase("lore")) {
-            lore = Arrays.asList(id[1].split("line:"));
-         } else if (id[0].equalsIgnoreCase("owner")) {
-            owner = id[1];
-         }
-      }
-      i = new ItemStack(type, amount);
-      if (dura != 0) {
-         i.setDurability(dura);
-      }
-      ItemMeta m = i.getItemMeta();
-      if (cName != null)
-         m.setDisplayName(cName);
-      if (rgb != null)
-         ((LeatherArmorMeta) m).setColor(Color.fromRGB(Integer.parseInt(rgb[0]), Integer.parseInt(rgb[1]), Integer.parseInt(rgb[2])));
-      if (!lore.isEmpty())
-         m.setLore(lore);
-      if (owner != null)
-         ((SkullMeta) m).setOwner(owner);
-      i.setItemMeta(m);
-      i.addUnsafeEnchantments(enchants);
-      return i;
     }
 }
