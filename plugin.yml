@@ -8,6 +8,9 @@ commands:
     ls:
       description: Lonely shop commands
 permissions:
-  lonelyshop.tester:
-    description: can use lonelyshop
+  lonelyshop.buy:
+    description: can buy items from lonelyshop
+    default: false
+  lonelyshop.sell:
+    description: can sell items to lonelyshop
     default: false

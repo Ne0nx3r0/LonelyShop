@@ -1,3 +1,17 @@
+# maximum number of items a player can have for sale
+#
+# nodes are checked like lonelyshop.max.citizen
+#
+# limits:
+#     citizen: 20
+#
+sell_limits:
+    citizen: 30
+    regular: 60
+    veteran: 120
+    vip: 180
+  
+# database settings - required
 database: 
     prefix: ls_
     hostname: localhost

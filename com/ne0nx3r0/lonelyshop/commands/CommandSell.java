@@ -1,6 +1,7 @@
 package com.ne0nx3r0.lonelyshop.commands;
 
 import com.ne0nx3r0.lonelyshop.LonelyShopPlugin;
+import com.ne0nx3r0.lonelyshop.inventory.InventoryActionResponse;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -59,15 +60,18 @@ class CommandSell extends LonelyCommand {
             return true;
         }
         
-        if(plugin.inventoryManager.putItemForSale(player,isInHand,price)) {
+        InventoryActionResponse response = plugin.inventoryManager.putItemForSale(player,isInHand,price);
+        
+        if(response.wasSuccessful()) {
             this.send(cs,isInHand.getType().name()+" was put up for sale for "+plugin.economy.format(price)+"!");
             
             player.setItemInHand(null);
             
             return true;
         }
-        
-        this.sendError(cs, "A strange error occurred");
+        else {
+            this.sendError(cs, response.getMessage());
+        }
         
         return true;
     }
