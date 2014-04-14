@@ -1,0 +1,13 @@
+name: LonelyShop
+main: com.ne0nx3r0.lonelyshop.LonelyShopPlugin
+version: '1.0a'
+database: false
+description: Global shops plugin
+depend: [Vault]
+commands:
+    ls:
+      description: Lonely shop commands
+permissions:
+  lonelyshop.tester:
+    description: can use lonelyshop
+    default: false

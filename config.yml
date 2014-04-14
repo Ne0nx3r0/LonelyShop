@@ -1,0 +1,7 @@
+database: 
+    prefix: ls_
+    hostname: localhost
+    port: 3306
+    database: lonelyshop
+    username: lonelyshop
+    password: lonelyshop
