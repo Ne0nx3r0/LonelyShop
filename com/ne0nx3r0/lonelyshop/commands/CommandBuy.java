@@ -100,7 +100,10 @@ class CommandBuy extends LonelyCommand {
     
     // Not everything fits into your happy little formatting box man!
     @Override
-    public String getUsage() {
-        return "/sell <material> [data]";
+    public String[] getUsage() {
+        return new String[]{
+            "/buy <material> [data]",
+            "/buy *"
+        };
     }
 }

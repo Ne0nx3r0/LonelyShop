@@ -28,8 +28,8 @@ public class LonelyCommand {
         return false;
     }
 
-    public String getUsage() {
-        return "/ls "+this.name+" "+this.usageArguments;
+    public String[] getUsage() {
+        return new String[]{"/ls "+this.name+" "+this.usageArguments};
     }
 
     void send(CommandSender cs, String...lines) {

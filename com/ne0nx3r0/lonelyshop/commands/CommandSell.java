@@ -78,7 +78,9 @@ class CommandSell extends LonelyCommand {
     
     // Not everything fits into your happy little formatting box man!
     @Override
-    public String getUsage() {
-        return "/sell <price>";
+    public String[] getUsage() {
+        return new String[]{
+            "/sell <price>",
+        };
     }
 }
