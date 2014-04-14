@@ -279,6 +279,16 @@ public class InventoryManager {
     public ArrayList<ItemForSale> getItemsForSale(Material material,byte data) {
         return this.getItemsForSale("WHERE material = "+material.getId()+" AND data = "+data);
     }
+
+    public ArrayList<ItemForSale> getSellerItems(Player player) {
+        PlayerInventoryAccount pia = this.getPlayerAccount(player);
+        
+        if(pia == null) {
+            return new ArrayList<>();
+        }
+        
+        return this.getItemsForSale("WHERE seller_id = "+pia.getdbId());
+    }
     
     private ArrayList<ItemForSale> getItemsForSale(String queryWhere) {
         ArrayList<ItemForSale> items = new ArrayList<>();
@@ -382,5 +392,38 @@ public class InventoryManager {
         }
 
         return new InventoryActionResponse(null,false,buyerWithdrawlResponse.errorMessage);
+    }
+
+    public InventoryActionResponse attemptToHandBackToSeller(Player player, int itemId) {
+        ItemForSale ifs = this.getItemForSale(itemId);
+        
+        if(ifs == null) {
+            return new InventoryActionResponse(null,false,"Invalid item id! (The item may have already been sold)");
+        }
+        
+        // double check the player is this player
+        PlayerInventoryAccount pia = this.getSellerAccount(ifs);
+        
+        if(pia == null){
+            return new InventoryActionResponse(null,false,"Invalid seller account... Awhaaa?");
+        }
+        
+        if(!pia.getUUID().equals(player.getUniqueId())){
+            return new InventoryActionResponse(null,false,"It seems like you aren't the seller of this item.");
+        }
+        
+        try {
+            PreparedStatement removeItemStatement = this.con.prepareStatement("DELETE FROM "+this.TBL_ITEMS+" WHERE id = ? LIMIT 1;");
+            removeItemStatement.setInt(1, itemId);
+
+            removeItemStatement.executeUpdate();
+        }
+        catch(Exception ex){
+            this.logger.log(Level.SEVERE, null, ex);
+                
+            return new InventoryActionResponse(null,false,"Unable to remove the for sale item");
+        }
+        
+        return new InventoryActionResponse(ifs.getItemStack(),true,"You retrieved your "+ifs.getItemStack().getType().name()+" from your shop!");
     }
 }

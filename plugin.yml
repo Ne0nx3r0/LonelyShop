@@ -1,6 +1,6 @@
 name: LonelyShop
 main: com.ne0nx3r0.lonelyshop.LonelyShopPlugin
-version: '1.01a'
+version: '1.3b'
 database: false
 description: Global shops plugin
 depend: [Vault]
@@ -8,13 +8,18 @@ commands:
     ls:
       description: Lonely shop commands
     buy:
-      description: Lonely shop buy command
+      description: Buy items from the global shop
     sell:
-      description: Lonely shop sell command
+      description: Sell an item to the global shop
+    shop:
+      description: Open your own shop
 permissions:
   lonelyshop.buy:
     description: can buy items from lonelyshop
     default: false
   lonelyshop.sell:
     description: can sell items to lonelyshop
+    default: false
+  lonelyshop.shop:
+    description: Open your for sale items screen
     default: false

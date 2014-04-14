@@ -19,6 +19,7 @@ public class LonelyShopCommandExecutor implements CommandExecutor {
         
         this.registerSubcommand(new CommandSell(plugin));
         this.registerSubcommand(new CommandBuy(plugin));
+        this.registerSubcommand(new CommandShop(plugin));
     }
 
     @Override
@@ -37,6 +38,15 @@ public class LonelyShopCommandExecutor implements CommandExecutor {
             List<String> lArgs = new ArrayList<>();
             
             lArgs.add("sell");
+            
+            lArgs.addAll(Arrays.asList(args));
+            
+            args = lArgs.toArray(new String[lArgs.size()]);
+        }     
+        else if(cmnd.getName().equalsIgnoreCase("shop")) {
+            List<String> lArgs = new ArrayList<>();
+            
+            lArgs.add("shop");
             
             lArgs.addAll(Arrays.asList(args));
             

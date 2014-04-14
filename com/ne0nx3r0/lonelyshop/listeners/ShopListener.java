@@ -17,14 +17,14 @@ public class ShopListener implements Listener {
     
     public ShopListener(LonelyShopPlugin plugin){
         this.plugin = plugin;
-        this.SHOP_TITLE = plugin.shopsManager.getShopTitle();
+        this.SHOP_TITLE = plugin.shopsManager.getShopsStarter();
     }
     
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onLonelyShopClick(InventoryClickEvent e) {        
         if(e.getRawSlot() < plugin.shopsManager.getMaxShopSlots() 
         &&(e.getWhoClicked() instanceof Player) 
-        && e.getInventory().getTitle().equals(this.SHOP_TITLE)) 
+        && e.getInventory().getTitle().startsWith(this.SHOP_TITLE)) 
         {
             if(e.getCurrentItem() == null){
                 return;
@@ -33,29 +33,15 @@ public class ShopListener implements Listener {
             e.setCancelled(true);
          
             Player player = (Player) e.getWhoClicked();
-            
-            
+
             if(!e.getCursor().getType().equals(Material.AIR)){
-                player.sendMessage(ChatColor.RED+"You can only buy with an empty hand.");
+                player.sendMessage(ChatColor.RED+"You must have an empty hand.");
                 
                 return;
             }
             
             if(!e.getCurrentItem().getType().equals(Material.AIR)){
-                InventoryActionResponse iar = plugin.shopsManager.attemptToBuy(player,e.getCurrentItem());
-
-                if(iar.wasSuccessful()) {
-                    e.getClickedInventory().setItem(e.getRawSlot(), new ItemStack(Material.AIR));
-
-                    ItemStack is = iar.getItemStack();
-
-                    e.setCursor(is);
-
-                    player.sendMessage(ChatColor.GREEN+iar.getMessage());
-                }
-                else {
-                    player.sendMessage(ChatColor.RED+iar.getMessage());
-                }
+                plugin.shopsManager.takeShopAction(e);
             }
         }
     }
