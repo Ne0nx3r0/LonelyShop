@@ -168,6 +168,8 @@ public class InventoryManager {
                 username = player.getName();
             }
             
+            this.logger.log(Level.INFO, "account created for {0} uuid:{1} dbid:{2}", new Object[]{player.getName(), uuid.toString(), dbID});
+            
             return new PlayerInventoryAccount(dbID,uuid,username);
         }
         catch (SQLException ex) {
@@ -206,6 +208,8 @@ public class InventoryManager {
             updateUsername.setInt(2, dbID);
             
             updateUsername.executeUpdate();
+            
+            this.logger.log(Level.INFO, "updated username for {0} dbid:{1}", new Object[]{username, dbID});
         } 
         catch (SQLException ex) {
             Logger.getLogger(InventoryManager.class.getName()).log(Level.SEVERE, null, ex);
@@ -256,7 +260,8 @@ public class InventoryManager {
         try {
             PreparedStatement createPlayerItem = this.con.prepareStatement("INSERT INTO "+this.TBL_ITEMS
                     +"(seller_id,material,data,amount,item_data,posted,price,price_per_item) "
-                    +"VALUES(?,?,?,?,?,?,?,?);");
+                    +"VALUES(?,?,?,?,?,?,?,?);",
+                    Statement.RETURN_GENERATED_KEYS);
             
             createPlayerItem.setInt(1, pia.getdbId());
             createPlayerItem.setInt(2, inHand.getTypeId());
@@ -267,7 +272,11 @@ public class InventoryManager {
             createPlayerItem.setDouble(7, price);
             createPlayerItem.setDouble(8, price / inHand.getAmount());
             
-            createPlayerItem.executeUpdate();
+            int itemId = createPlayerItem.executeUpdate();
+
+            this.logger.log(Level.INFO, "item id:{0} is:{1} put for sale by {2}({3}) for {4}", 
+                    new Object[]{itemId, inHand, pia.getUsername(),pia.getUUID(), price});
+            
         } catch (SQLException ex) {
             Logger.getLogger(InventoryManager.class.getName()).log(Level.SEVERE, null, ex);
             
@@ -386,6 +395,9 @@ public class InventoryManager {
 
                 markAsSold.executeUpdate();
 
+                this.logger.log(Level.INFO, "set item id:{0} is:{1} sold to {2}({3}) for {4}", 
+                        new Object[]{itemId, ifs.getItemStack(), buyerInventoryAccount.getUsername(), buyerInventoryAccount.getUUID(), price});
+            
                 EconomyResponse sellerDepositResponse = plugin.economy.depositPlayer(sellerInventoryAccount.getUsername(), price);
 
                 if(sellerDepositResponse.type.equals(ResponseType.SUCCESS)) {
@@ -443,6 +455,9 @@ public class InventoryManager {
             markAsSold.setInt(3, itemId);
 
             markAsSold.executeUpdate();
+
+            this.logger.log(Level.INFO, "set item id:{0} is:{1} given back to seller {3} {4}", 
+                    new Object[]{itemId, ifs.getItemStack(), sellerAccount.getUsername(), sellerAccount.getUUID()});
         }
         catch(Exception ex){
             this.logger.log(Level.SEVERE, null, ex);
