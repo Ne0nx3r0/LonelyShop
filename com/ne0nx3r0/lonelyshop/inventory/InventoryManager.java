@@ -94,10 +94,19 @@ public class InventoryManager {
             if(!tableExistsResultSet.next()) {
                 this.con.setAutoCommit(false);
 
-                PreparedStatement createAccountsTable = this.con.prepareStatement("CREATE TABLE IF NOT EXISTS "+this.TBL_ACCOUNTS+" (  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,  `uuid` VARCHAR(36) NOT NULL,  `username` VARCHAR(16) NOT NULL,  PRIMARY KEY (`id`),  UNIQUE INDEX `uuid_UNIQUE` (`uuid` ASC))ENGINE = InnoDB;");
+                // Generated from MySQL Workbench
+                String createAccountsTableQuery = "CREATE TABLE IF NOT EXISTS ###TABLE_ACCOUNTS### (  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,  `uuid` VARCHAR(36) NOT NULL,  `username` VARCHAR(16) NOT NULL,  PRIMARY KEY (`id`),  UNIQUE INDEX `uuid_UNIQUE` (`uuid` ASC))ENGINE = InnoDB;";
+                createAccountsTableQuery = createAccountsTableQuery.replaceAll("###TABLE_ACCOUNTS###", this.TBL_ACCOUNTS);
+
+                // Generated from MySQL Workbench
+                String createItemsTableQuery = "CREATE TABLE IF NOT EXISTS ###TABLE_ITEMS### (  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,  `seller_id` INT UNSIGNED NOT NULL,  `material` INT UNSIGNED NOT NULL,  `data` INT UNSIGNED NOT NULL,  `amount` INT UNSIGNED NOT NULL,  `item_data` TEXT NOT NULL,  `posted` DATETIME NOT NULL,  `price` DECIMAL(13,2) UNSIGNED NOT NULL,  `price_per_item` DECIMAL(13,2) UNSIGNED NOT NULL,  `buyer_id` INT UNSIGNED NULL,  `sold_at` DATETIME NULL,  `sold` BIT NOT NULL DEFAULT 0,  PRIMARY KEY (`id`),  INDEX `fk_items_player_account_idx` (`seller_id` ASC),  INDEX `material` (`material` ASC),  INDEX `fk_items_player_account1_idx` (`buyer_id` ASC),  CONSTRAINT `fk_items_player_account`    FOREIGN KEY (`seller_id`)    REFERENCES ###TABLE_ACCOUNTS### (`id`)    ON DELETE NO ACTION    ON UPDATE NO ACTION,  CONSTRAINT `fk_items_player_account1`    FOREIGN KEY (`buyer_id`)    REFERENCES ###TABLE_ACCOUNTS### (`id`)    ON DELETE NO ACTION    ON UPDATE NO ACTION)ENGINE = InnoDB;";
+                createItemsTableQuery = createItemsTableQuery.replaceAll("###TABLE_ACCOUNTS###", this.TBL_ACCOUNTS);
+                createItemsTableQuery = createItemsTableQuery.replaceAll("###TABLE_ITEMS###", this.TBL_ITEMS);
+                
+                PreparedStatement createAccountsTable = this.con.prepareStatement(createAccountsTableQuery);
                 createAccountsTable.execute();
                 
-                PreparedStatement createItemsTable = this.con.prepareStatement("CREATE TABLE IF NOT EXISTS "+this.TBL_ITEMS+" (  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,  `seller_id` INT UNSIGNED NOT NULL,  `material` INT UNSIGNED NOT NULL,  `data` INT UNSIGNED NOT NULL,  `amount` INT UNSIGNED NOT NULL,  `item_data` TEXT NOT NULL,  `posted` DATETIME NOT NULL,  `price` DECIMAL(13,2) UNSIGNED NOT NULL,  `price_per_item` DECIMAL(13,2) UNSIGNED NOT NULL,  PRIMARY KEY (`id`),  INDEX `fk_items_seller_id_idx` (`seller_id` ASC),  INDEX `material` (`material` ASC),  CONSTRAINT `fk_items_seller_id`    FOREIGN KEY (`seller_id`)    REFERENCES "+this.TBL_ACCOUNTS+" (`id`)    ON DELETE NO ACTION    ON UPDATE NO ACTION)ENGINE = InnoDB;");
+                PreparedStatement createItemsTable = this.con.prepareStatement(createItemsTableQuery);
                 createItemsTable.execute();
 
                 this.con.commit();
@@ -223,7 +232,7 @@ public class InventoryManager {
         }
         
         try {
-            PreparedStatement getPlayerItemsCount = this.con.prepareStatement("SELECT COUNT(*) as playerItems FROM "+this.TBL_ITEMS+" WHERE seller_id = ?");
+            PreparedStatement getPlayerItemsCount = this.con.prepareStatement("SELECT COUNT(*) as playerItems FROM "+this.TBL_ITEMS+" WHERE sold = 0 AND seller_id = ?");
             
             getPlayerItemsCount.setInt(1, pia.getdbId());
             
@@ -273,11 +282,11 @@ public class InventoryManager {
     }
     
     public ArrayList<ItemForSale> getItemsForSale(Material material) {
-        return this.getItemsForSale("WHERE material = "+material.getId());
+        return this.getItemsForSale("AND material = "+material.getId());
     }
     
     public ArrayList<ItemForSale> getItemsForSale(Material material,byte data) {
-        return this.getItemsForSale("WHERE material = "+material.getId()+" AND data = "+data);
+        return this.getItemsForSale("AND material = "+material.getId()+" AND data = "+data);
     }
 
     public synchronized ArrayList<ItemForSale> getSellerItems(Player player) {
@@ -287,14 +296,14 @@ public class InventoryManager {
             return new ArrayList<>();
         }
         
-        return this.getItemsForSale("WHERE seller_id = "+pia.getdbId());
+        return this.getItemsForSale("AND seller_id = "+pia.getdbId());
     }
     
     private ArrayList<ItemForSale> getItemsForSale(String queryWhere) {
         ArrayList<ItemForSale> items = new ArrayList<>();
         
         try {
-            PreparedStatement getItemsForSale = this.con.prepareStatement("SELECT id,amount,item_data,posted,price,price_per_item FROM "+this.TBL_ITEMS+" "+queryWhere+" ORDER BY price_per_item,posted LIMIT "+plugin.shopsManager.getMaxShopSlots());            
+            PreparedStatement getItemsForSale = this.con.prepareStatement("SELECT id,amount,item_data,posted,price,price_per_item FROM "+this.TBL_ITEMS+" WHERE sold = 0 "+queryWhere+" ORDER BY price_per_item,posted LIMIT "+plugin.shopsManager.getMaxShopSlots());            
             ResultSet result = getItemsForSale.executeQuery();
             
             while(result.next()) {
@@ -318,7 +327,7 @@ public class InventoryManager {
 
     public synchronized ItemForSale getItemForSale(int itemId) {
         try {
-            PreparedStatement getItemsForSale = this.con.prepareStatement("SELECT amount,item_data,posted,price,price_per_item FROM "+this.TBL_ITEMS+" WHERE id = ?");
+            PreparedStatement getItemsForSale = this.con.prepareStatement("SELECT amount,item_data,posted,price,price_per_item FROM "+this.TBL_ITEMS+" WHERE sold = 0 AND id = ?");
             getItemsForSale.setInt(1, itemId);
             
             ResultSet result = getItemsForSale.executeQuery();
@@ -342,6 +351,12 @@ public class InventoryManager {
     }
 
     public synchronized InventoryActionResponse attemptToBuy(Player player, int itemId) {
+        PlayerInventoryAccount buyerInventoryAccount = this.getPlayerAccount(player);
+        
+        if(buyerInventoryAccount == null) {
+            return new InventoryActionResponse(null,false,"Unable to query database for your info!");
+        }
+        
         ItemForSale ifs = this.getItemForSale(itemId);
         
         if(ifs == null) {
@@ -354,9 +369,9 @@ public class InventoryManager {
             return new InventoryActionResponse(null,false,"You don't have "+plugin.economy.format(price));
         }
         
-        PlayerInventoryAccount pia = this.getSellerAccount(ifs);
+        PlayerInventoryAccount sellerInventoryAccount = this.getSellerAccount(ifs);
         
-        if(pia == null) {
+        if(sellerInventoryAccount == null) {
             return new InventoryActionResponse(null,false,"Unable to query database for seller info!");
         }
         
@@ -364,20 +379,31 @@ public class InventoryManager {
         
         if(buyerWithdrawlResponse.type.equals(ResponseType.SUCCESS)){
             try {
-                PreparedStatement removeItemStatement = this.con.prepareStatement("DELETE FROM "+this.TBL_ITEMS+" WHERE id = ? LIMIT 1;");
-                removeItemStatement.setInt(1, itemId);
+                PreparedStatement markAsSold = this.con.prepareStatement("UPDATE "+this.TBL_ITEMS+" SET sold=1,buyer_id=?,sold_at=? WHERE id = ? LIMIT 1;");
+                markAsSold.setInt(1, buyerInventoryAccount.getdbId());
+                markAsSold.setTimestamp(2, new java.sql.Timestamp(new java.util.Date().getTime()));
+                markAsSold.setInt(3, itemId);
 
-                removeItemStatement.executeUpdate();
+                markAsSold.executeUpdate();
 
-                EconomyResponse sellerDepositResponse = plugin.economy.depositPlayer(pia.getUsername(), price);
+                EconomyResponse sellerDepositResponse = plugin.economy.depositPlayer(sellerInventoryAccount.getUsername(), price);
 
                 if(sellerDepositResponse.type.equals(ResponseType.SUCCESS)) {
-                    Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "mail "+pia.getUsername()+" You sold "+ifs.getItemStack().getType()+" for "+plugin.economy.format(price));
+                    Player seller = Bukkit.getPlayer(sellerInventoryAccount.getUUID());
+                    ItemStack itemSold = ifs.getItemStack();
+                    
+                    // message if online, mail otherwise
+                    if(seller != null){
+                        seller.sendMessage("LonelyShop: You sold "+itemSold.getAmount()+" "+itemSold.getType()+" for "+plugin.economy.format(price));
+                    }
+                    else {
+                        Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "mail "+sellerInventoryAccount.getUsername()+" You sold "+ifs.getItemStack().getType()+" for "+plugin.economy.format(price));
+                    }
                 }
                 // really shouldn't ever happen... Even with LonelyEconomy the money was just given to the server to hand to the player
                 else {
                     Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "mail ne0nx3r0 that scary error happened at "+new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date())+" with "+ifs.getItemStack().getType()+" for "+plugin.economy.format(price));
-                    Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "mail "+pia.getUsername()+" an error occurred selling "+ifs.getItemStack().getType()+" for "+plugin.economy.format(price)+", sorry but you did not receive the money for it. Ne0nx3r0 should have been notified.");
+                    Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(), "mail "+sellerInventoryAccount.getUsername()+" an error occurred selling "+ifs.getItemStack().getType()+" for "+plugin.economy.format(price)+", sorry but you did not receive the money for it. Ne0nx3r0 should have been notified.");
                 }
             } 
             catch (SQLException ex) {
@@ -400,21 +426,23 @@ public class InventoryManager {
         }
         
         // double check the player is this player
-        PlayerInventoryAccount pia = this.getSellerAccount(ifs);
+        PlayerInventoryAccount sellerAccount = this.getSellerAccount(ifs);
         
-        if(pia == null){
+        if(sellerAccount == null){
             return new InventoryActionResponse(null,false,"Invalid seller account... Awhaaa?");
         }
         
-        if(!pia.getUUID().equals(player.getUniqueId())){
+        if(!sellerAccount.getUUID().equals(player.getUniqueId())){
             return new InventoryActionResponse(null,false,"It seems like you aren't the seller of this item.");
         }
         
         try {
-            PreparedStatement removeItemStatement = this.con.prepareStatement("DELETE FROM "+this.TBL_ITEMS+" WHERE id = ? LIMIT 1;");
-            removeItemStatement.setInt(1, itemId);
+            PreparedStatement markAsSold = this.con.prepareStatement("UPDATE "+this.TBL_ITEMS+" SET sold=1,buyer_id=?,sold_at=? WHERE id = ? LIMIT 1;");
+            markAsSold.setInt(1, sellerAccount.getdbId());
+            markAsSold.setTimestamp(2, new java.sql.Timestamp(new java.util.Date().getTime()));
+            markAsSold.setInt(3, itemId);
 
-            removeItemStatement.executeUpdate();
+            markAsSold.executeUpdate();
         }
         catch(Exception ex){
             this.logger.log(Level.SEVERE, null, ex);
