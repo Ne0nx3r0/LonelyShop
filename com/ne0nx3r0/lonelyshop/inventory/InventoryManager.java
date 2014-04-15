@@ -125,11 +125,11 @@ public class InventoryManager {
     
     
     
-    public PlayerInventoryAccount getPlayerAccount(Player player) {
+    public synchronized PlayerInventoryAccount getPlayerAccount(Player player) {
         UUID uuid = player.getUniqueId();
         
         try {
-            PreparedStatement getPlayerAccount = this.con.prepareStatement("SELECT id,username FROM "+this.TBL_ACCOUNTS+" WHERE uuid=?");
+            PreparedStatement getPlayerAccount = this.con.prepareStatement("SELECT id,username FROM "+this.TBL_ACCOUNTS+" WHERE uuid=? LIMIT 1;");
             
             getPlayerAccount.setString(1, uuid.toString());
             
@@ -168,7 +168,7 @@ public class InventoryManager {
         return null;
     }
 
-    public PlayerInventoryAccount getSellerAccount(ItemForSale ifs) {
+    public synchronized PlayerInventoryAccount getSellerAccount(ItemForSale ifs) {
         try {
             PreparedStatement getSellerAccount = this.con.prepareStatement("SELECT id,uuid,username FROM "+this.TBL_ACCOUNTS+" WHERE id=(SELECT seller_id FROM "+this.TBL_ITEMS+" WHERE id=? LIMIT 1) LIMIT 1;");
             getSellerAccount.setInt(1, ifs.getDbID());
@@ -190,7 +190,7 @@ public class InventoryManager {
         return null;
     }
 
-    private boolean updatePlayerAccountUsername(int dbID, String username) {
+    private synchronized boolean updatePlayerAccountUsername(int dbID, String username) {
         try {
             PreparedStatement updateUsername = this.con.prepareStatement("UPDATE "+this.TBL_ACCOUNTS+" SET username=? WHERE id=? LIMIT 1;");
             updateUsername.setString(1, username);
@@ -206,7 +206,7 @@ public class InventoryManager {
         return true;
     }
     
-    public InventoryActionResponse putItemForSale(Player player, ItemStack inHand, double price) {
+    public synchronized InventoryActionResponse putItemForSale(Player player, ItemStack inHand, double price) {
         PlayerInventoryAccount pia = this.getPlayerAccount(player);
         
         Iterator iterator = this.PERMISSION_LIMIT_GROUPS.entrySet().iterator();
@@ -280,7 +280,7 @@ public class InventoryManager {
         return this.getItemsForSale("WHERE material = "+material.getId()+" AND data = "+data);
     }
 
-    public ArrayList<ItemForSale> getSellerItems(Player player) {
+    public synchronized ArrayList<ItemForSale> getSellerItems(Player player) {
         PlayerInventoryAccount pia = this.getPlayerAccount(player);
         
         if(pia == null) {
@@ -316,7 +316,7 @@ public class InventoryManager {
         return items;
     }
 
-    public ItemForSale getItemForSale(int itemId) {
+    public synchronized ItemForSale getItemForSale(int itemId) {
         try {
             PreparedStatement getItemsForSale = this.con.prepareStatement("SELECT amount,item_data,posted,price,price_per_item FROM "+this.TBL_ITEMS+" WHERE id = ?");
             getItemsForSale.setInt(1, itemId);
@@ -341,7 +341,7 @@ public class InventoryManager {
         return null;
     }
 
-    public InventoryActionResponse attemptToBuy(Player player, int itemId) {
+    public synchronized InventoryActionResponse attemptToBuy(Player player, int itemId) {
         ItemForSale ifs = this.getItemForSale(itemId);
         
         if(ifs == null) {
@@ -369,8 +369,6 @@ public class InventoryManager {
 
                 removeItemStatement.executeUpdate();
 
-                
-                
                 EconomyResponse sellerDepositResponse = plugin.economy.depositPlayer(pia.getUsername(), price);
 
                 if(sellerDepositResponse.type.equals(ResponseType.SUCCESS)) {
@@ -394,7 +392,7 @@ public class InventoryManager {
         return new InventoryActionResponse(null,false,buyerWithdrawlResponse.errorMessage);
     }
 
-    public InventoryActionResponse attemptToHandBackToSeller(Player player, int itemId) {
+    public synchronized InventoryActionResponse attemptToHandBackToSeller(Player player, int itemId) {
         ItemForSale ifs = this.getItemForSale(itemId);
         
         if(ifs == null) {
