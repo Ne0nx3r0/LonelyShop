@@ -62,12 +62,14 @@ class CommandBuy extends LonelyCommand {
             ArrayList<ItemForSale> items = plugin.inventoryManager.getItemsForSale(material);
 
             if(items.isEmpty()) {
-                this.sendError(cs, "There is no "+sMaterial+" for sale currently!");
+                this.sendError(cs, "There are no "+sMaterial+" for sale currently!");
 
                 return true;
             }
 
             plugin.shopsManager.openShopInventory(player,items);
+            
+            return true;
         }
  
         byte data = 0;
@@ -88,7 +90,7 @@ class CommandBuy extends LonelyCommand {
         ArrayList<ItemForSale> items = plugin.inventoryManager.getItemsForSale(material,data);
         
         if(items.isEmpty()) {
-            this.sendError(cs, "There is no "+sMaterial+"("+data+") for sale currently!");
+            this.sendError(cs, "There are no "+sMaterial+"("+data+") for sale currently!");
             
             return true;
         }
