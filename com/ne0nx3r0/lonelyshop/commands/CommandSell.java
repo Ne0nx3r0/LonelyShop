@@ -49,6 +49,11 @@ class CommandSell extends LonelyCommand {
             
             return true;
         }
+        else if(price < 0){
+            this.sendError(cs, "Price must be positive");
+            
+            return true;
+        }
         
         Player player = (Player) cs;
         
