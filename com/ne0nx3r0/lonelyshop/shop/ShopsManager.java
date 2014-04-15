@@ -20,6 +20,9 @@ public class ShopsManager {
     private final int SHOP_INVENTORY_SLOTS = 9*6;
     
     private final LonelyShopPlugin plugin;
+    private final String CLICK_TO_RETREIVE = ChatColor.GREEN+"Click to retreive";
+    private final String CLICK_TO_BUY = ChatColor.GREEN+"Click to Buy";
+    private final String CLICK_TO_CONFIRM = ChatColor.DARK_GREEN+"Click again"+ChatColor.GREEN+" to confirm";
 
     public ShopsManager(LonelyShopPlugin plugin) {
         this.plugin = plugin;
@@ -50,7 +53,7 @@ public class ShopsManager {
                 lore = new ArrayList<>();
             }
             
-            lore.add(ChatColor.GRAY+"- LonelyShop -");
+            lore.add(this.CLICK_TO_BUY);
             
             String perItem = "";
             
@@ -110,7 +113,7 @@ public class ShopsManager {
                 lore = new ArrayList<>();
             }
             
-            lore.add(ChatColor.GRAY+"- LonelyShop -");
+            lore.add(this.CLICK_TO_RETREIVE);
             
             String perItem = "";
             
@@ -205,7 +208,21 @@ public class ShopsManager {
                 player.sendMessage(ChatColor.RED+response.getMessage());
             }
         }
-        else {
+        else {//size - 5
+            if(lore.get(lore.size() - 4).equals(this.CLICK_TO_BUY)) {
+                player.sendMessage(this.CLICK_TO_CONFIRM);
+                
+                lore.set(lore.size() - 4,this.CLICK_TO_CONFIRM);
+                
+                ItemMeta meta = is.getItemMeta();
+                
+                meta.setLore(lore);
+                
+                is.setItemMeta(meta);
+                
+                return;
+            }
+            
             InventoryActionResponse response = plugin.inventoryManager.attemptToBuy(player, itemId);
 
             if(response.wasSuccessful()) {
