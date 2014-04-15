@@ -22,29 +22,29 @@ public class TimeSince {
         different = different % daysInMilli;
 
         if(elapsedDays > 0) {
-            return elapsedDays+" days";
+            return elapsedDays+" days ago";
         }
 
         long elapsedHours = different / hoursInMilli;
         different = different % hoursInMilli;
 
         if(elapsedHours > 0) {
-            return elapsedHours+" hours";
+            return elapsedHours+" hours ago";
         }
 
         long elapsedMinutes = different / minutesInMilli;
         different = different % minutesInMilli;
 
         if(elapsedMinutes > 0) {
-            return elapsedMinutes+" minutes";
+            return elapsedMinutes+" minutes ago";
         }
 
         long elapsedSeconds = different / secondsInMilli;
 
         if(elapsedSeconds > 0) {
-            return elapsedSeconds+" seconds";
+            return elapsedSeconds+" seconds ago";
         }
         
-        return different+"ms";
+        return different+"ms ago";
     }
 }

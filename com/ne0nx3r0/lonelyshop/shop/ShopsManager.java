@@ -125,7 +125,7 @@ public class ShopsManager {
             }
             
             lore.add(ChatColor.GRAY+"Price: "+ChatColor.DARK_PURPLE+plugin.economy.format(item.getPrice()) + perItem);
-            lore.add(ChatColor.GRAY+"Posted: "+ChatColor.DARK_PURPLE+item.getPostedDate());
+            lore.add(ChatColor.GRAY+"Posted: "+ChatColor.DARK_PURPLE+TimeSince.getTimeSinceString(item.getPostedDate()));
             lore.add(ChatColor.GRAY+"ID: "+ChatColor.DARK_PURPLE+item.getDbID());
             
             meta.setLore(lore);
