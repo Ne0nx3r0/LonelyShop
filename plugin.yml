@@ -4,6 +4,7 @@ version: '1.8b'
 database: false
 description: Global shops plugin
 depend: [Vault]
+softdepend: [Essentials]
 commands:
     ls:
       description: Lonely shop commands
