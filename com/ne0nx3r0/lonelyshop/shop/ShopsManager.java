@@ -3,6 +3,7 @@ package com.ne0nx3r0.lonelyshop.shop;
 import com.ne0nx3r0.lonelyshop.LonelyShopPlugin;
 import com.ne0nx3r0.lonelyshop.inventory.ItemForSale;
 import com.ne0nx3r0.lonelyshop.inventory.InventoryActionResponse;
+import com.ne0nx3r0.util.TimeSince;
 import java.util.ArrayList;
 import java.util.List;
 import org.bukkit.ChatColor;
@@ -64,7 +65,7 @@ public class ShopsManager {
             }
             
             lore.add(ChatColor.GRAY+"Price: "+ChatColor.DARK_PURPLE+plugin.economy.format(item.getPrice()) + perItem);
-            lore.add(ChatColor.GRAY+"Posted: "+ChatColor.DARK_PURPLE+item.getDisplayPostedDate());
+            lore.add(ChatColor.GRAY+"Posted: "+ChatColor.DARK_PURPLE+TimeSince.getTimeSinceString(item.getPostedDate()));
             lore.add(ChatColor.GRAY+"ID: "+ChatColor.DARK_PURPLE+item.getDbID());
             
             meta.setLore(lore);
@@ -124,7 +125,7 @@ public class ShopsManager {
             }
             
             lore.add(ChatColor.GRAY+"Price: "+ChatColor.DARK_PURPLE+plugin.economy.format(item.getPrice()) + perItem);
-            lore.add(ChatColor.GRAY+"Posted: "+ChatColor.DARK_PURPLE+item.getDisplayPostedDate());
+            lore.add(ChatColor.GRAY+"Posted: "+ChatColor.DARK_PURPLE+item.getPostedDate());
             lore.add(ChatColor.GRAY+"ID: "+ChatColor.DARK_PURPLE+item.getDbID());
             
             meta.setLore(lore);

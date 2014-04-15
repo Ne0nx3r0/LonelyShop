@@ -1,8 +1,6 @@
 package com.ne0nx3r0.lonelyshop.inventory;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.UUID;
 import org.bukkit.inventory.ItemStack;
 
 public class ItemForSale {
@@ -32,8 +30,8 @@ public class ItemForSale {
         return this.pricePerItem;
     }
     
-    public String getDisplayPostedDate(){
-	return new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(this.postedDate);
+    public Date getPostedDate(){
+	return this.postedDate;
     }
 
     public int getDbID() {
