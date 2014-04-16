@@ -39,6 +39,8 @@ public class ItemStackConvertor {
            f.append(";");
         }
         else if(is.getType().equals(Material.ENCHANTED_BOOK)) {
+            f.append("enchantments=");
+           
             EnchantmentStorageMeta bookmeta = (EnchantmentStorageMeta) is.getItemMeta();
             
             int in = 1;
@@ -83,16 +85,20 @@ public class ItemStackConvertor {
         return f.toString();
     }
     
+    // TODO: Clean up this mess...
     public static ItemStack fromString(String s) {
-      ItemStack i;
       Material type = Material.AIR;
       short dura = 0;
       int amount = 1;
-      Map<Enchantment, Integer> enchants = new HashMap<Enchantment, Integer>();
+      Map<Enchantment, Integer> enchants = new HashMap<>();
+      Map<Enchantment, Integer> bookEnchants = new HashMap<>();
       String cName = null;
       String[] rgb = null;
-      List<String> lore = new ArrayList<String>();
+      List<String> lore = new ArrayList<>();
       String owner = null;
+      
+      ItemStack is = new ItemStack(type, amount);
+      
       for (String d : s.split(";")) {
          String[] id = d.split("=");
          if (id[0].equalsIgnoreCase("type")) {
@@ -101,7 +107,18 @@ public class ItemStackConvertor {
             dura = Short.parseShort(id[1]);
          } else if (id[0].equalsIgnoreCase("amount")) {
             amount = Integer.parseInt(id[1]);
-         } else if (id[0].equalsIgnoreCase("enchantments")) {
+         }
+         else if(id[0].equalsIgnoreCase("enchantments") && type.equals(Material.ENCHANTED_BOOK)) {
+            EnchantmentStorageMeta bookmeta = (EnchantmentStorageMeta) is.getItemMeta();
+                
+            for (String en : id[1].split("&")) {
+               String[] ench = en.split(":");
+                bookmeta.addStoredEnchant(Enchantment.getByName(ench[0]), Integer.parseInt(ench[1]), true);
+            }
+            
+            is.setItemMeta(bookmeta);
+         }
+         else if (id[0].equalsIgnoreCase("enchantments")) {
             for (String en : id[1].split("&")) {
                String[] ench = en.split(":");
                enchants.put(Enchantment.getByName(ench[0]), Integer.parseInt(ench[1]));
@@ -116,11 +133,11 @@ public class ItemStackConvertor {
             owner = id[1];
          }
       }
-      i = new ItemStack(type, amount);
+      
       if (dura != 0) {
-         i.setDurability(dura);
+         is.setDurability(dura);
       }
-      ItemMeta m = i.getItemMeta();
+      ItemMeta m = is.getItemMeta();
       if (cName != null)
          m.setDisplayName(cName);
       if (rgb != null)
@@ -129,8 +146,9 @@ public class ItemStackConvertor {
          m.setLore(lore);
       if (owner != null)
          ((SkullMeta) m).setOwner(owner);
-      i.setItemMeta(m);
-      i.addUnsafeEnchantments(enchants);
-      return i;
+      is.setItemMeta(m);
+      is.addUnsafeEnchantments(enchants);
+      
+      return is;
     }
 }
