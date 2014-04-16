@@ -39,20 +39,23 @@ public class ItemStackConvertor {
            f.append(";");
         }
         else if(is.getType().equals(Material.ENCHANTED_BOOK)) {
-            f.append("enchantments=");
-           
             EnchantmentStorageMeta bookmeta = (EnchantmentStorageMeta) is.getItemMeta();
             
-            int in = 1;
-            
-            for (Entry<Enchantment, Integer> enchantment : bookmeta.getStoredEnchants().entrySet()) {
-                if(in > 1){
-                    f.append("&");
+            if(bookmeta.hasStoredEnchants()) {
+                f.append("enchantments=");
+
+
+                int in = 1;
+
+                for (Entry<Enchantment, Integer> enchantment : bookmeta.getStoredEnchants().entrySet()) {
+                    if(in > 1){
+                        f.append("&");
+                    }
+
+                    f.append(enchantment.getKey().getName()+":"+enchantment.getValue());
+
+                    in++;
                 }
-                
-                f.append(enchantment.getKey().getName()+":"+enchantment.getValue());
-                
-                in++;
             }
         }
         
