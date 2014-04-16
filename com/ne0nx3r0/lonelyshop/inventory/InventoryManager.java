@@ -156,21 +156,22 @@ public class InventoryManager {
                         player.sendMessage("Warning: was unable to update your username in the database. This may cause issues in delivering your funds.");
                     }
                 }
+                
+                return new PlayerInventoryAccount(dbID,uuid,username);
             }
             else {
-                PreparedStatement createPlayerAccount = this.con.prepareStatement("INSERT INTO "+this.TBL_ACCOUNTS+"(uuid,username) VALUES(?,?);",
-                    Statement.RETURN_GENERATED_KEYS);
+                PreparedStatement createPlayerAccount = this.con.prepareStatement("INSERT INTO "+this.TBL_ACCOUNTS+"(uuid,username) VALUES(?,?);");
                 
                 createPlayerAccount.setString(1, uuid.toString());
                 createPlayerAccount.setString(2, player.getName());
                 
                 dbID = createPlayerAccount.executeUpdate();
-                username = player.getName();
+                
+                this.logger.log(Level.INFO, "account created for {0} uuid:{1} dbid:{2}", new Object[]{player.getName(), uuid.toString(), dbID});
+                
+                // I don't like the redundancy, but I can't seem to get the returned dbId to be correct using RETURN_GENERATED_KEYS...
+                return this.getPlayerAccount(player);
             }
-            
-            this.logger.log(Level.INFO, "account created for {0} uuid:{1} dbid:{2}", new Object[]{player.getName(), uuid.toString(), dbID});
-            
-            return new PlayerInventoryAccount(dbID,uuid,username);
         }
         catch (SQLException ex) {
             Logger.getLogger(InventoryManager.class.getName()).log(Level.SEVERE, null, ex);
@@ -220,7 +221,7 @@ public class InventoryManager {
     }
     
     public synchronized InventoryActionResponse putItemForSale(Player player, ItemStack inHand, double price) {
-        PlayerInventoryAccount pia = this.getPlayerAccount(player);
+        PlayerInventoryAccount sellerAccount = this.getPlayerAccount(player);
         
         Iterator iterator = this.PERMISSION_LIMIT_GROUPS.entrySet().iterator();
         int maxItems = 0;
@@ -238,7 +239,7 @@ public class InventoryManager {
         try {
             PreparedStatement getPlayerItemsCount = this.con.prepareStatement("SELECT COUNT(*) as playerItems FROM "+this.TBL_ITEMS+" WHERE sold = 0 AND seller_id = ?");
             
-            getPlayerItemsCount.setInt(1, pia.getdbId());
+            getPlayerItemsCount.setInt(1, sellerAccount.getdbId());
             
             ResultSet result = getPlayerItemsCount.executeQuery();
             
@@ -260,10 +261,9 @@ public class InventoryManager {
         try {
             PreparedStatement createPlayerItem = this.con.prepareStatement("INSERT INTO "+this.TBL_ITEMS
                     +"(seller_id,material,data,amount,item_data,posted,price,price_per_item) "
-                    +"VALUES(?,?,?,?,?,?,?,?);",
-                    Statement.RETURN_GENERATED_KEYS);
+                    +"VALUES(?,?,?,?,?,?,?,?);");
             
-            createPlayerItem.setInt(1, pia.getdbId());
+            createPlayerItem.setInt(1, sellerAccount.getdbId());
             createPlayerItem.setInt(2, inHand.getTypeId());
             createPlayerItem.setInt(3, inHand.getData().getData());
             createPlayerItem.setInt(4, inHand.getAmount());
@@ -272,10 +272,10 @@ public class InventoryManager {
             createPlayerItem.setDouble(7, price);
             createPlayerItem.setDouble(8, price / inHand.getAmount());
             
-            int itemId = createPlayerItem.executeUpdate();
+            createPlayerItem.executeUpdate();
 
-            this.logger.log(Level.INFO, "item id:{0} is:{1} put for sale by {2}({3}) for {4}", 
-                    new Object[]{itemId, inHand, pia.getUsername(),pia.getUUID(), price});
+            this.logger.log(Level.INFO, "is:{0} put for sale by {1}({2}) for {3}", 
+                    new Object[]{inHand, sellerAccount.getUsername(),sellerAccount.getUUID(), price});
             
         } catch (SQLException ex) {
             Logger.getLogger(InventoryManager.class.getName()).log(Level.SEVERE, null, ex);
