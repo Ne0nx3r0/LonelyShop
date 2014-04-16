@@ -5,12 +5,15 @@ package com.ne0nx3r0.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -22,6 +25,7 @@ public class ItemStackConvertor {
         if (is.getDurability() != 0)
            f.append("dura=" + is.getDurability() + ";");
         f.append("amount=" + is.getAmount() + ";");
+        
         if (!is.getEnchantments().isEmpty()) {
            f.append("enchantments=");
            int in = 1;
@@ -34,6 +38,22 @@ public class ItemStackConvertor {
            }
            f.append(";");
         }
+        else if(is.getType().equals(Material.ENCHANTED_BOOK)) {
+            EnchantmentStorageMeta bookmeta = (EnchantmentStorageMeta) is.getItemMeta();
+            
+            int in = 1;
+            
+            for (Entry<Enchantment, Integer> enchantment : bookmeta.getStoredEnchants().entrySet()) {
+                if(in > 1){
+                    f.append("&");
+                }
+                
+                f.append(enchantment.getKey().getName()+":"+enchantment.getValue());
+                
+                in++;
+            }
+        }
+        
         if (is.hasItemMeta()) {
            ItemMeta m = is.getItemMeta();
            if (m.hasDisplayName()) {
