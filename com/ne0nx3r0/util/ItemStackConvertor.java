@@ -5,7 +5,6 @@ package com.ne0nx3r0.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -21,16 +20,16 @@ import org.bukkit.inventory.meta.SkullMeta;
 public class ItemStackConvertor {
     public static String fromItemStack(ItemStack is) {
         StringBuilder f = new StringBuilder();
-        f.append("type=" + is.getType() + ";");
+        f.append("type=").append(is.getType()).append(";");
         if (is.getDurability() != 0)
-           f.append("dura=" + is.getDurability() + ";");
-        f.append("amount=" + is.getAmount() + ";");
+           f.append("dura=").append(is.getDurability()).append(";");
+        f.append("amount=").append(is.getAmount()).append(";");
         
         if (!is.getEnchantments().isEmpty()) {
            f.append("enchantments=");
            int in = 1;
            for (Map.Entry<Enchantment, Integer> key : is.getEnchantments().entrySet()) {
-              f.append(key.getKey().getName() + ":" + key.getValue());
+              f.append(key.getKey().getName()).append(":").append(key.getValue());
               if (in != is.getEnchantments().size()) {
                  f.append("&");
               }
@@ -52,7 +51,7 @@ public class ItemStackConvertor {
                         f.append("&");
                     }
 
-                    f.append(enchantment.getKey().getName()+":"+enchantment.getValue());
+                    f.append(enchantment.getKey().getName()).append(":").append(enchantment.getValue());
 
                     in++;
                 }
