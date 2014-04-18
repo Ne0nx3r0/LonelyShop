@@ -1,13 +1,13 @@
 package com.ne0nx3r0.lonelyshop.inventory;
 
 import com.ne0nx3r0.lonelyshop.LonelyShopPlugin;
+import com.ne0nx3r0.lonelyshop.shop.LonelyShop;
 import com.ne0nx3r0.util.ItemStackConvertor;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -286,33 +286,33 @@ public class InventoryManager {
         return new InventoryActionResponse(inHand,true,"Item successfully put for sale!");
     }
     
-    public ArrayList<ItemForSale> getItemsForSale() {
-        return this.getItemsForSale("");
+    public ArrayList<ItemForSale> getItemsForSale(int page) {
+        return this.getItemsForSale("",page);
     }
     
-    public ArrayList<ItemForSale> getItemsForSale(Material material) {
-        return this.getItemsForSale("AND material = "+material.getId());
+    public ArrayList<ItemForSale> getItemsForSale(Material material,int page) {
+        return this.getItemsForSale("AND material = "+material.getId(),page);
     }
     
-    public ArrayList<ItemForSale> getItemsForSale(Material material,byte data) {
-        return this.getItemsForSale("AND material = "+material.getId()+" AND data = "+data);
+    public ArrayList<ItemForSale> getItemsForSale(Material material,byte data,int page) {
+        return this.getItemsForSale("AND material = "+material.getId()+" AND data = "+data,page);
     }
 
-    public synchronized ArrayList<ItemForSale> getSellerItems(Player player) {
+    public synchronized ArrayList<ItemForSale> getSellerItems(Player player,int page) {
         PlayerInventoryAccount pia = this.getPlayerAccount(player);
         
         if(pia == null) {
             return new ArrayList<>();
         }
         
-        return this.getItemsForSale("AND seller_id = "+pia.getdbId());
+        return this.getItemsForSale("AND seller_id = "+pia.getdbId(),page);
     }
     
-    private ArrayList<ItemForSale> getItemsForSale(String queryWhere) {
+    private ArrayList<ItemForSale> getItemsForSale(String queryWhere,int page) {
         ArrayList<ItemForSale> items = new ArrayList<>();
         
         try {
-            PreparedStatement getItemsForSale = this.con.prepareStatement("SELECT id,amount,item_data,posted,price,price_per_item FROM "+this.TBL_ITEMS+" WHERE sold = 0 "+queryWhere+" ORDER BY price_per_item,posted LIMIT "+plugin.shopsManager.getMaxShopSlots());            
+            PreparedStatement getItemsForSale = this.con.prepareStatement("SELECT id,amount,item_data,posted,price,price_per_item FROM "+this.TBL_ITEMS+" WHERE sold = 0 "+queryWhere+" ORDER BY price_per_item,posted LIMIT "+(LonelyShop.SHOP_ITEM_SLOTS*page-9)+","+(LonelyShop.SHOP_ITEM_SLOTS-9));            
             ResultSet result = getItemsForSale.executeQuery();
             
             while(result.next()) {

@@ -1,9 +1,9 @@
 package com.ne0nx3r0.lonelyshop;
 
 import com.ne0nx3r0.lonelyshop.commands.LonelyShopCommandExecutor;
-import com.ne0nx3r0.lonelyshop.shop.ShopsManager;
 import com.ne0nx3r0.lonelyshop.inventory.InventoryManager;
 import com.ne0nx3r0.lonelyshop.listeners.ShopListener;
+import com.ne0nx3r0.lonelyshop.shop.ShopsManager3;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -17,7 +17,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class LonelyShopPlugin extends JavaPlugin {
     public InventoryManager inventoryManager;
     public Economy economy;
-    public ShopsManager shopsManager;
+    public ShopsManager3 shopsManager;
     
     @Override
     public void onEnable() {
@@ -45,7 +45,7 @@ public class LonelyShopPlugin extends JavaPlugin {
                 
         this.inventoryManager = new InventoryManager(this);
         
-        this.shopsManager = new ShopsManager(this);
+        this.shopsManager = new ShopsManager3(this);
         
         this.getCommand("ls").setExecutor(new LonelyShopCommandExecutor(this));
         this.getCommand("sell").setExecutor(new LonelyShopCommandExecutor(this));

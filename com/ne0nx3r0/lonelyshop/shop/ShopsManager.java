@@ -33,14 +33,9 @@ public class ShopsManager {
         
         Inventory inventory = plugin.getServer().createInventory(null, SHOP_INVENTORY_SLOTS, this.getShopsStarter());
         
-        int currentSlot = 0;
+        int currentSlot = 9;
         
-        for(ItemForSale item : items) {
-            //reserve slots 0 & 8
-            /*if(currentSlot == 0 || currentSlot == 8) {
-                currentSlot++;
-            }*/
-            
+        for(ItemForSale item : items) {            
             ItemStack is = item.getItemStack();
             
             ItemMeta meta = is.getItemMeta();
@@ -75,17 +70,13 @@ public class ShopsManager {
             inventory.setItem(currentSlot, is);
             
             currentSlot++;
-            
-            if(currentSlot == SHOP_INVENTORY_SLOTS) {
-                break;
-            }
         }
         
         player.openInventory(inventory);
     }
 
     public InventoryActionResponse openPlayerShop(Player player) {
-        ArrayList<ItemForSale> items = plugin.inventoryManager.getSellerItems(player);
+        ArrayList<ItemForSale> items = plugin.inventoryManager.getSellerItems(player,1);
         
         if(items.isEmpty()){
             return new InventoryActionResponse(null,false,"You don't have any items for sale currently!");
