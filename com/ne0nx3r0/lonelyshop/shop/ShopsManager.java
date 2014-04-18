@@ -1,11 +1,12 @@
+
 package com.ne0nx3r0.lonelyshop.shop;
 
 import com.ne0nx3r0.lonelyshop.LonelyShopPlugin;
-import com.ne0nx3r0.lonelyshop.inventory.ItemForSale;
 import com.ne0nx3r0.lonelyshop.inventory.InventoryActionResponse;
-import com.ne0nx3r0.util.TimeSince;
+import com.ne0nx3r0.lonelyshop.inventory.ItemForSale;
 import java.util.ArrayList;
 import java.util.List;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
@@ -16,166 +17,103 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 public class ShopsManager {
-    private final String SHOPS_STARTER = "LonelyShop";
-    private final String SHOP_ENDING_YOUR_ITEMS = " - Your Items";
-    private final int SHOP_INVENTORY_SLOTS = 9*6;
-    
     private final LonelyShopPlugin plugin;
-    private final String CLICK_TO_RETREIVE = ChatColor.GREEN+"Click to retreive";
-    private final String CLICK_TO_BUY = ChatColor.GREEN+"Click to Buy";
-    private final String CLICK_TO_CONFIRM = ChatColor.DARK_GREEN+"Click again"+ChatColor.GREEN+" to confirm";
-
+    
     public ShopsManager(LonelyShopPlugin plugin) {
         this.plugin = plugin;
     }
+    public void openShopInventory(Player player, ArrayList<ItemForSale> items, ShopType shopType) {
+         this.openShopInventory(player, items, shopType, null, (byte) -1);
+    }
 
-    public void openShopInventory(Player player, ArrayList<ItemForSale> items) {
-        
-        Inventory inventory = plugin.getServer().createInventory(null, SHOP_INVENTORY_SLOTS, this.getShopsStarter());
-        
-        int currentSlot = 9;
-        
-        for(ItemForSale item : items) {            
-            ItemStack is = item.getItemStack();
-            
-            ItemMeta meta = is.getItemMeta();
-            
-            List<String> lore;
-            
-            if(meta.hasLore()){
-                lore = meta.getLore();
-            }
-            else{
-                lore = new ArrayList<>();
-            }
-            
-            lore.add(this.CLICK_TO_BUY);
-            
-            String perItem = "";
-            
-            if(is.getAmount() > 1){
-                lore.add(ChatColor.GRAY+"Amount: "+ChatColor.DARK_PURPLE+is.getAmount());
-                
-                perItem = ChatColor.GRAY+" ("+plugin.economy.format(item.getPricePerItem())+ChatColor.GRAY+" each)";
-            }
-            
-            lore.add(ChatColor.GRAY+"Price: "+ChatColor.DARK_PURPLE+plugin.economy.format(item.getPrice()) + perItem);
-            lore.add(ChatColor.GRAY+"Posted: "+ChatColor.DARK_PURPLE+TimeSince.getTimeSinceString(item.getPostedDate()));
-            lore.add(ChatColor.GRAY+"ID: "+ChatColor.DARK_PURPLE+item.getDbID());
-            
-            meta.setLore(lore);
-            
-            is.setItemMeta(meta);
-            
-            inventory.setItem(currentSlot, is);
-            
-            currentSlot++;
-        }
-        
+    public void openShopInventory(Player player, ArrayList<ItemForSale> items, ShopType shopType, Material material) {
+        this.openShopInventory(player, items, shopType, material, (byte) -1);
+    }
+
+    public void openShopInventory(Player player, ArrayList<ItemForSale> items, ShopType shopType, Material material, byte data) {
+        Inventory inventory = LonelyShop.getShopInventory(plugin.economy, player, shopType, items, material, data, 1);
+           
         player.openInventory(inventory);
     }
-
-    public InventoryActionResponse openPlayerShop(Player player) {
-        ArrayList<ItemForSale> items = plugin.inventoryManager.getSellerItems(player,1);
-        
-        if(items.isEmpty()){
-            return new InventoryActionResponse(null,false,"You don't have any items for sale currently!");
-        }
-        
-        Inventory inventory = plugin.getServer().createInventory(null, SHOP_INVENTORY_SLOTS, this.SHOPS_STARTER+this.SHOP_ENDING_YOUR_ITEMS);
-        
-        int currentSlot = 0;
-        
-        for(ItemForSale item : items) {
-            //reserve slots 0 & 8
-            /*if(currentSlot == 0 || currentSlot == 8) {
-                currentSlot++;
-            }*/
-            
-            ItemStack is = item.getItemStack();
-            
-            ItemMeta meta = is.getItemMeta();
-            
-            List<String> lore;
-            
-            if(meta.hasLore()){
-                lore = meta.getLore();
-            }
-            else{
-                lore = new ArrayList<>();
-            }
-            
-            lore.add(this.CLICK_TO_RETREIVE);
-            
-            String perItem = "";
-            
-            if(is.getAmount() > 1){
-                lore.add(ChatColor.GRAY+"Amount: "+ChatColor.DARK_PURPLE+is.getAmount());
-                
-                perItem = ChatColor.GRAY+" ("+plugin.economy.format(item.getPricePerItem())+ChatColor.GRAY+" each)";
-            }
-            
-            lore.add(ChatColor.GRAY+"Price: "+ChatColor.DARK_PURPLE+plugin.economy.format(item.getPrice()) + perItem);
-            lore.add(ChatColor.GRAY+"Posted: "+ChatColor.DARK_PURPLE+TimeSince.getTimeSinceString(item.getPostedDate()));
-            lore.add(ChatColor.GRAY+"ID: "+ChatColor.DARK_PURPLE+item.getDbID());
-            
-            meta.setLore(lore);
-            
-            is.setItemMeta(meta);
-            
-            inventory.setItem(currentSlot, is);
-            
-            currentSlot++;
-            
-            if(currentSlot == SHOP_INVENTORY_SLOTS) {
-                break;
-            }
-        }
-        
-        player.openInventory(inventory);
-        
-        return new InventoryActionResponse(null,true,"Opened your shop!");
-    }
-
-    public String getShopsStarter() {
-        return this.SHOPS_STARTER;
-    }    
     
-    public int getMaxShopSlots() {
-        return this.SHOP_INVENTORY_SLOTS;
-    }
-
-    public void closeAllShops() {
-        for(Player player : plugin.getServer().getOnlinePlayers()){
-            HumanEntity hent = player;
-            
-            if(hent.getOpenInventory().getTitle().equals(this.SHOPS_STARTER)) {
-                player.closeInventory();
-                
-                player.sendMessage(ChatColor.RED+"LonelyShops was disabled or reloaded.");
-            }
+    public void onShopAction(InventoryClickEvent e) {
+        // if there's no item in the slot then we don't care
+        if(e.getCurrentItem() == null || e.getCurrentItem().getType().equals(Material.AIR)){
+            return;
         }
-    }
-    
-    public void takeShopAction(InventoryClickEvent e) {
+
         Player player = (Player) e.getWhoClicked();
         ItemStack is = e.getCurrentItem();
-        String shopTitle = e.getInventory().getTitle();
-        
+
+        // no metadata means it's not an action or item for sale
         if(!is.hasItemMeta() || !is.getItemMeta().hasLore()) { 
-            player.sendMessage("Invalid LonelyShop item!");
+            player.sendMessage(ChatColor.RED+"Invalid LonelyShop item!");
             
             return;
         }
         
-        List<String> lore = is.getItemMeta().getLore();
+        ItemMeta meta = is.getItemMeta();
+        
+        List<String> lore = meta.getLore();
 
+        // next or previous page
+        if(meta.getDisplayName().equals(LonelyShop.PREV_PAGE_TEXT) 
+        || meta.getDisplayName().equals(LonelyShop.NEXT_PAGE_TEXT)) {
+            ShopType shopType = ShopType.valueOf(lore.get(0).substring(2));
+            int newPageNumber = Integer.parseInt(lore.get(1).substring(2));
+            Material material = null;
+            byte data = -1;
+
+            if(shopType.equals(ShopType.Material) || shopType.equals(ShopType.MaterialAndData)){
+                material = Material.valueOf(lore.get(2).substring(2));
+            }
+            
+            if(shopType.equals(ShopType.MaterialAndData)){
+                data = Byte.valueOf(lore.get(3).substring(2));
+            }
+            
+            ArrayList<ItemForSale> items;
+
+            switch(shopType) {
+                default:
+                case All:
+                    items = plugin.inventoryManager.getItemsForSale(newPageNumber);
+                    break;
+                case Material:
+                    items = plugin.inventoryManager.getItemsForSale(material, newPageNumber);
+                    break;
+                case MaterialAndData:
+                    items = plugin.inventoryManager.getItemsForSale(material, data, newPageNumber);
+                    break;
+                case MyForSaleItems:
+                    items = plugin.inventoryManager.getSellerItems(player, newPageNumber);
+                    break;
+            }
+            
+            if(items.isEmpty()) {
+                player.sendMessage(ChatColor.RED+"No items found on that page");
+                
+                return;
+            }
+
+            Inventory inventory = LonelyShop.getShopInventory(plugin.economy, player, shopType, items, material, data, newPageNumber);
+            
+            e.getInventory().setContents(inventory.getContents());
+            
+            return;
+        }
+        
+        // check if buying/confirming an item
         String sId = lore.get(lore.size()-1);
 
-        int itemId;
+        int itemId = 0;
 
         try {
-            itemId = Integer.parseInt(sId.substring(sId.lastIndexOf(ChatColor.COLOR_CHAR)+2));               
+            //TODO: Something a little more secure? (check the rest of the string too)
+            // strictly speaking it's not necessary because all lonelyshop items
+            // get custom metadata, but I would feel a nice sense of calm if the 
+            // rest of the string was verified.
+            itemId = Integer.parseInt(sId.substring(sId.lastIndexOf(ChatColor.COLOR_CHAR)+2)); 
         }
         catch(NumberFormatException ex){
             player.sendMessage("Invalid LonelyShop item!");
@@ -183,7 +121,9 @@ public class ShopsManager {
             return;
         }
         
-        if(shopTitle.equals(this.SHOPS_STARTER+this.SHOP_ENDING_YOUR_ITEMS)) {
+        String shopTitle = e.getInventory().getTitle();
+        
+        if(shopTitle.equals(LonelyShop.SHOPTITLE_SCREEN_MY_ITEMS)) {
             InventoryActionResponse response = plugin.inventoryManager.attemptToHandBackToSeller(player, itemId);
 
             if(response.wasSuccessful()) {
@@ -200,13 +140,11 @@ public class ShopsManager {
                 player.sendMessage(ChatColor.RED+response.getMessage());
             }
         }
-        else {//size - 5
-            if(lore.get(lore.size() - 4).equals(this.CLICK_TO_BUY)) {
-                player.sendMessage(this.CLICK_TO_CONFIRM);
+        else {
+            if(lore.get(lore.size() - 4).equals(LonelyShop.CLICK_TO_BUY)) {
+                player.sendMessage(LonelyShop.CLICK_TO_CONFIRM);
                 
-                lore.set(lore.size() - 4,this.CLICK_TO_CONFIRM);
-                
-                ItemMeta meta = is.getItemMeta();
+                lore.set(lore.size() - 4,LonelyShop.CLICK_TO_CONFIRM);
                 
                 meta.setLore(lore);
                 
@@ -229,6 +167,18 @@ public class ShopsManager {
             }
             else {
                 player.sendMessage(ChatColor.RED+response.getMessage());
+            }
+        }
+    }
+
+    public void closeAllShops() {
+        for(Player player : plugin.getServer().getOnlinePlayers()){
+            HumanEntity hent = player;
+            
+            if(hent.getOpenInventory().getTitle().equals(LonelyShop.SHOPTITLE_PREFIX)) {
+                player.closeInventory();
+                
+                player.sendMessage(ChatColor.RED+"LonelyShops was disabled or reloaded.");
             }
         }
     }

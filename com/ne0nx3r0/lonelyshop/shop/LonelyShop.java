@@ -1,7 +1,5 @@
-
 package com.ne0nx3r0.lonelyshop.shop;
 
-import com.ne0nx3r0.lonelyshop.inventory.InventoryActionResponse;
 import com.ne0nx3r0.lonelyshop.inventory.ItemForSale;
 import com.ne0nx3r0.util.TimeSince;
 import java.util.ArrayList;
@@ -19,7 +17,7 @@ public class LonelyShop {
     public static final String SHOPTITLE_PREFIX = "LonelyShop";
     public static final String SHOPTITLE_SCREEN_ALL_ITEMS_PAGE = SHOPTITLE_PREFIX+" - All Items";
     public static final String SHOPTITLE_SCREEN_SEARCH_PAGE = SHOPTITLE_PREFIX+" - Search";
-    public static final String SHOPTITLE_SCREEN_YOUR_ITEMS = SHOPTITLE_PREFIX+" - Your Items";
+    public static final String SHOPTITLE_SCREEN_MY_ITEMS = SHOPTITLE_PREFIX+" - Your Items";
     
     public static final String CLICK_TO_RETREIVE = ChatColor.GREEN+"Click to retreive";
     public static final String CLICK_TO_BUY = ChatColor.GREEN+"Click to Buy";
@@ -28,66 +26,83 @@ public class LonelyShop {
     public static final String PREV_PAGE_TEXT = ChatColor.GREEN + "Prev Page";
     public static final String NEXT_PAGE_TEXT = ChatColor.GREEN + "Next Page";
     
-    public static final int SHOP_ITEM_SLOTS = 5*9;
-    
-    private static ItemStack getPrevPageItem(int currentPage) {
-        ItemStack is = new ItemStack(Material.BOOK,1);
-        
-        ItemMeta meta = is.getItemMeta();
-        
-        meta.setDisplayName(LonelyShop.PREV_PAGE_TEXT);
-        
-        is.setItemMeta(meta);
-        
-        return is;
-    }
-    
-    private static ItemStack getNextPageItem(int currentPage) {
-        ItemStack is = new ItemStack(Material.BOOK,1);
-        
-        ItemMeta meta = is.getItemMeta();
-        
-        meta.setDisplayName(LonelyShop.NEXT_PAGE_TEXT);
-        
-        is.setItemMeta(meta);
-        
-        return is;
-    }
+    public static final int SHOP_ITEM_SLOTS = 9*5;
 
-    // TODO: All this static was a terrible idea.
-    static Inventory getShopInventory(Economy economy,Player player, ShopType shopType, ArrayList<ItemForSale> items, int pageNumber, Material shopMaterial, byte shopData) {    
+    public static Inventory getShopInventory(Economy economy,Player player, ShopType shopType, ArrayList<ItemForSale> items, Material material, byte data, int pageNumber) {
         String sTitle;
         
         switch(shopType){
             case All:
             default:
-                sTitle = LonelyShop.SHOPTITLE_PREFIX+LonelyShop.SHOPTITLE_SCREEN_ALL_ITEMS_PAGE+pageNumber;
+                sTitle = LonelyShop.SHOPTITLE_SCREEN_ALL_ITEMS_PAGE;
                 break;
             case MyForSaleItems:
-                
-                sTitle = LonelyShop.SHOPTITLE_PREFIX+LonelyShop.SHOPTITLE_SCREEN_YOUR_ITEMS+pageNumber;
+                sTitle = LonelyShop.SHOPTITLE_SCREEN_MY_ITEMS;
                 break;
             case Material:
-                
-                sTitle = LonelyShop.SHOPTITLE_PREFIX+String.format(LonelyShop.SHOPTITLE_SCREEN_SEARCH_PAGE+pageNumber,new Object[]{shopMaterial});
-                break;
             case MaterialAndData:
-                
-                sTitle = LonelyShop.SHOPTITLE_PREFIX+String.format(LonelyShop.SHOPTITLE_SCREEN_SEARCH_PAGE+pageNumber,new Object[]{shopMaterial+" "+shopData});
+                sTitle = LonelyShop.SHOPTITLE_SCREEN_SEARCH_PAGE;
                 break;
         }
         
         Inventory inventory = Bukkit.getServer().createInventory(null, LonelyShop.SHOP_ITEM_SLOTS, sTitle);
 
         if(pageNumber > 1) {
-            inventory.setItem(0, LonelyShop.getPrevPageItem(pageNumber-1));
+            ItemStack prevItem = new ItemStack(Material.BOOK,1);
+
+            ItemMeta meta = prevItem.getItemMeta();
+
+            meta.setDisplayName(LonelyShop.PREV_PAGE_TEXT);
+
+            List<String> lore = meta.getLore();
+
+            lore.add(ChatColor.DARK_GRAY+shopType.name());
+            
+            lore.add(ChatColor.DARK_GRAY.toString()+(pageNumber-1));
+            
+            if(shopType.equals(ShopType.Material) || shopType.equals(ShopType.MaterialAndData)) {
+                lore.add(ChatColor.DARK_GRAY+material.name());
+            }
+            
+            if(shopType.equals(ShopType.MaterialAndData)) {
+                lore.add(ChatColor.DARK_GRAY.toString()+data);
+            }
+            
+            meta.setLore(lore);
+
+            prevItem.setItemMeta(meta);
+            
+            inventory.setItem(0, prevItem);
         }
-        
-        //TODO:WHY AM I DOING THIS -9 all the time!!! FIX IT
-        if(items.size() >= LonelyShop.SHOP_ITEM_SLOTS-9){
-            inventory.setItem(8, LonelyShop.getNextPageItem(pageNumber+1));
+
+        if(items.size() >= LonelyShop.SHOP_ITEM_SLOTS){
+            ItemStack nextItem = new ItemStack(Material.BOOK,1);
+
+            ItemMeta meta = nextItem.getItemMeta();
+
+            meta.setDisplayName(LonelyShop.NEXT_PAGE_TEXT);
+
+            List<String> lore = meta.getLore();
+
+            lore.add(ChatColor.DARK_GRAY+shopType.name());
+            
+            lore.add(ChatColor.DARK_GRAY.toString()+(pageNumber+1));
+            
+            if(shopType.equals(ShopType.Material) || shopType.equals(ShopType.MaterialAndData)) {
+                lore.add(ChatColor.DARK_GRAY+material.name());
+            }
+            
+            if(shopType.equals(ShopType.MaterialAndData)) {
+                lore.add(ChatColor.DARK_GRAY.toString()+data);
+            }
+            
+            meta.setLore(lore);
+
+            nextItem.setItemMeta(meta);
+            
+            inventory.setItem(8, nextItem);
         }
-        
+
         int currentSlot = 9;
         
         for(ItemForSale item : items) {
@@ -133,8 +148,5 @@ public class LonelyShop {
         
         return inventory;
     }
-
-    static Inventory getShopInventory(Economy economy, Player player, ShopType shopType, ArrayList<ItemForSale> items, int pageNumber) {    
-        return LonelyShop.getShopInventory(economy, player, shopType, items, pageNumber, null, (byte) 0);
-    }
+    
 }
