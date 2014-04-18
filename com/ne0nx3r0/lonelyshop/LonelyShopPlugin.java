@@ -1,5 +1,6 @@
 package com.ne0nx3r0.lonelyshop;
 
+import com.earth2me.essentials.Essentials;
 import com.ne0nx3r0.lonelyshop.commands.LonelyShopCommandExecutor;
 import com.ne0nx3r0.lonelyshop.inventory.InventoryManager;
 import com.ne0nx3r0.lonelyshop.listeners.ShopListener;
@@ -18,6 +19,7 @@ public class LonelyShopPlugin extends JavaPlugin {
     public InventoryManager inventoryManager;
     public Economy economy;
     public ShopsManager shopsManager;
+    public Essentials essentials;
     
     @Override
     public void onEnable() {
@@ -42,7 +44,11 @@ public class LonelyShopPlugin extends JavaPlugin {
             
             return;
         }
-                
+             
+        if(getServer().getPluginManager().isPluginEnabled("Essentials")){
+            this.essentials = (Essentials) this.getServer().getPluginManager().getPlugin("Essentials");
+        }
+        
         this.inventoryManager = new InventoryManager(this);
         
         this.shopsManager = new ShopsManager(this);

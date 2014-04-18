@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 class CommandBuy extends LonelyCommand {
     private final LonelyShopPlugin plugin;
@@ -51,7 +52,23 @@ class CommandBuy extends LonelyCommand {
         }
         
         Material material = Material.matchMaterial(sMaterial);
+        byte data = -1;
         
+        // Tap into the essentials ItemDb
+        if(material == null && plugin.essentials != null){
+            try {
+                ItemStack isTemp = plugin.essentials.getItemDb().get(sMaterial);
+                
+                material = isTemp.getType();
+                data = (byte) isTemp.getTypeId();
+            } catch (Exception ex) {
+                this.sendError(cs, sMaterial+" is not a valid material!");
+            
+                return true;
+            }
+        }
+
+        // Probably not necessary...
         if(material == null){
             this.sendError(cs, sMaterial+" is not a valid material!");
             
@@ -59,7 +76,7 @@ class CommandBuy extends LonelyCommand {
         }
         
         // buy <material>
-        if(args.length == 2) {
+        if(args.length == 2 && data == -1) {
             ArrayList<ItemForSale> items = plugin.inventoryManager.getItemsForSale(material,1);
 
             if(items.isEmpty()) {
@@ -72,8 +89,6 @@ class CommandBuy extends LonelyCommand {
             
             return true;
         }
- 
-        byte data = 0;
         
         if(args.length > 2){
             String sData = args[2];

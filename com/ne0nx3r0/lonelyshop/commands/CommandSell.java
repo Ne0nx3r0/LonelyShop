@@ -1,5 +1,6 @@
 package com.ne0nx3r0.lonelyshop.commands;
 
+import com.earth2me.essentials.ItemDb;
 import com.ne0nx3r0.lonelyshop.LonelyShopPlugin;
 import com.ne0nx3r0.lonelyshop.inventory.InventoryActionResponse;
 import org.bukkit.Material;
@@ -9,7 +10,7 @@ import org.bukkit.inventory.ItemStack;
 
 class CommandSell extends LonelyCommand {
     private final LonelyShopPlugin plugin;
-
+    
     public CommandSell(LonelyShopPlugin plugin) {
         super("sell","<price>","sell the item in your hand","lonelyshop.sell");
         
