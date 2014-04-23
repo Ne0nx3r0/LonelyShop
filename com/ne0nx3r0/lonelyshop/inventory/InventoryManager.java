@@ -132,8 +132,6 @@ public class InventoryManager {
         }
     }
     
-    
-    
     public synchronized PlayerInventoryAccount getPlayerAccount(Player player) {
         UUID uuid = player.getUniqueId();
         
@@ -312,7 +310,7 @@ public class InventoryManager {
         ArrayList<ItemForSale> items = new ArrayList<>();
         
         try {
-            PreparedStatement getItemsForSale = this.con.prepareStatement("SELECT id,amount,item_data,posted,price,price_per_item FROM "+this.TBL_ITEMS+" WHERE sold = 0 "+queryWhere+" ORDER BY price_per_item,posted LIMIT "+(LonelyShop.SHOP_ITEM_SLOTS*page-9)+","+(LonelyShop.SHOP_ITEM_SLOTS-9));            
+            PreparedStatement getItemsForSale = this.con.prepareStatement("SELECT id,amount,item_data,posted,price,price_per_item FROM "+this.TBL_ITEMS+" WHERE sold = 0 "+queryWhere+" ORDER BY posted DESC,price_per_item LIMIT "+(LonelyShop.SHOP_ITEM_SLOTS*(page-1))+","+(LonelyShop.SHOP_ITEM_SLOTS));            
             ResultSet result = getItemsForSale.executeQuery();
             
             while(result.next()) {

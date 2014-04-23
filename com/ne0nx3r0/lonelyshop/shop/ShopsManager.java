@@ -6,7 +6,6 @@ import com.ne0nx3r0.lonelyshop.inventory.InventoryActionResponse;
 import com.ne0nx3r0.lonelyshop.inventory.ItemForSale;
 import java.util.ArrayList;
 import java.util.List;
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
@@ -37,11 +36,6 @@ public class ShopsManager {
     }
     
     public void onShopAction(InventoryClickEvent e) {
-        // if there's no item in the slot then we don't care
-        if(e.getCurrentItem() == null || e.getCurrentItem().getType().equals(Material.AIR)){
-            return;
-        }
-
         Player player = (Player) e.getWhoClicked();
         ItemStack is = e.getCurrentItem();
 
@@ -57,8 +51,9 @@ public class ShopsManager {
         List<String> lore = meta.getLore();
 
         // next or previous page
-        if(meta.getDisplayName().equals(LonelyShop.PREV_PAGE_TEXT) 
-        || meta.getDisplayName().equals(LonelyShop.NEXT_PAGE_TEXT)) {
+        if(meta.hasDisplayName()
+        && (meta.getDisplayName().equals(LonelyShop.PREV_PAGE_TEXT) 
+        || meta.getDisplayName().equals(LonelyShop.NEXT_PAGE_TEXT))) {
             ShopType shopType = ShopType.valueOf(lore.get(0).substring(2));
             int newPageNumber = Integer.parseInt(lore.get(1).substring(2));
             Material material = null;

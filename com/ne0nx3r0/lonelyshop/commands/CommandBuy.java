@@ -59,8 +59,9 @@ class CommandBuy extends LonelyCommand {
             try {
                 ItemStack isTemp = plugin.essentials.getItemDb().get(sMaterial);
                 
+                sMaterial = isTemp.getType().name();
                 material = isTemp.getType();
-                data = (byte) isTemp.getTypeId();
+                data = (byte) isTemp.getData().getData();
             } catch (Exception ex) {
                 this.sendError(cs, sMaterial+" is not a valid material!");
             

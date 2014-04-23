@@ -58,6 +58,8 @@ public class ItemStackConvertor {
                     in++;
                 }
             }
+            
+            f.append(";");
         }
         
         if (is.hasItemMeta()) {

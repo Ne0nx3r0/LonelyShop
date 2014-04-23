@@ -54,7 +54,7 @@ public class LonelyShop {
 
             meta.setDisplayName(LonelyShop.PREV_PAGE_TEXT);
 
-            List<String> lore = meta.getLore();
+            List<String> lore = new ArrayList<>();
 
             lore.add(ChatColor.DARK_GRAY+shopType.name());
             
@@ -82,7 +82,7 @@ public class LonelyShop {
 
             meta.setDisplayName(LonelyShop.NEXT_PAGE_TEXT);
 
-            List<String> lore = meta.getLore();
+            List<String> lore = new ArrayList<>();
 
             lore.add(ChatColor.DARK_GRAY+shopType.name());
             
@@ -119,7 +119,12 @@ public class LonelyShop {
                 lore = new ArrayList<>();
             }
             
-            lore.add(LonelyShop.CLICK_TO_RETREIVE);
+            if(shopType.equals(ShopType.MyForSaleItems)) {
+                lore.add(LonelyShop.CLICK_TO_RETREIVE);
+            }
+            else {
+                lore.add(LonelyShop.CLICK_TO_BUY);
+            }
             
             String perItem = "";
             
