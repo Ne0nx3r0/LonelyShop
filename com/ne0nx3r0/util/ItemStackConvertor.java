@@ -78,14 +78,14 @@ public class ItemStackConvertor {
               f.append("lore=");
               StringBuilder lore = new StringBuilder();
               for (String s : m.getLore()) {
-                 lore.append("line:").append(s);
+                 lore.append("line:").append(s.replace(";","&#59"));
               }
               f.append(lore.toString().replaceFirst("line:", ""));
            }
            if (m instanceof SkullMeta) {
               SkullMeta me = (SkullMeta) m;
               if (me.hasOwner())
-                 f.append("owner=").append(me.getOwner());
+                 f.append("owner=").append(me.getOwner().replace(";","&#59"));
            }
         }
         return f.toString();
@@ -134,9 +134,9 @@ public class ItemStackConvertor {
          } else if (id[0].equalsIgnoreCase("rgb")) {
             rgb = id[1].split(",");
          } else if (id[0].equalsIgnoreCase("lore")) {
-            lore = Arrays.asList(id[1].split("line:"));
+            lore = Arrays.asList(id[1].replace("&#59",";").split("line:"));
          } else if (id[0].equalsIgnoreCase("owner")) {
-            owner = id[1];
+            owner = id[1].replace("&#59",";");
          }
       }
       
