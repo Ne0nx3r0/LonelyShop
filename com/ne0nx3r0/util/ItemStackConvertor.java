@@ -65,7 +65,7 @@ public class ItemStackConvertor {
         if (is.hasItemMeta()) {
            ItemMeta m = is.getItemMeta();
            if (m.hasDisplayName()) {
-              f.append("name=").append(m.getDisplayName()).append(";");
+              f.append("name=").append(m.getDisplayName().replace(";","&#59")).append(";");
            }
            if (m instanceof LeatherArmorMeta) {
               LeatherArmorMeta me = (LeatherArmorMeta) m;
@@ -130,7 +130,7 @@ public class ItemStackConvertor {
                enchants.put(Enchantment.getByName(ench[0]), Integer.parseInt(ench[1]));
             }
          } else if (id[0].equalsIgnoreCase("name")) {
-            cName = id[1];
+            cName = id[1].replace("&#59",";");
          } else if (id[0].equalsIgnoreCase("rgb")) {
             rgb = id[1].split(",");
          } else if (id[0].equalsIgnoreCase("lore")) {
