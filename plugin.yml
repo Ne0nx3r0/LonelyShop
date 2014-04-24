@@ -1,6 +1,6 @@
 name: LonelyShop
 main: com.ne0nx3r0.lonelyshop.LonelyShopPlugin
-version: '1.20b'
+version: '1.21b'
 database: false
 description: Global shops plugin
 depend: [Vault]
