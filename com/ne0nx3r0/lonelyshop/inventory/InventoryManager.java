@@ -3,7 +3,6 @@ package com.ne0nx3r0.lonelyshop.inventory;
 import com.ne0nx3r0.lonelyshop.LonelyShopPlugin;
 import com.ne0nx3r0.lonelyshop.shop.LonelyShop;
 import com.ne0nx3r0.util.ItemStackConvertor;
-import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -51,7 +50,6 @@ public class InventoryManager {
 
         ConfigurationSection dbConfig = plugin.getConfig().getConfigurationSection("database");
         
-        String dbType = dbConfig.getString("type","sqlite");
         String prefix = dbConfig.getString("prefix","");
         String hostname = dbConfig.getString("hostname","localhost");
         String port = dbConfig.getString("port","3306");
@@ -62,122 +60,57 @@ public class InventoryManager {
         this.TBL_ACCOUNTS = prefix+"player_accounts";
         this.TBL_ITEMS = prefix+"items";
              
-        if(dbType.equalsIgnoreCase("mysql")){
-            try {
-                Class.forName("com.mysql.jdbc.Driver");
-            } 
-            catch (ClassNotFoundException ex) {
-                this.logger.log(Level.SEVERE, null, ex);
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+        } 
+        catch (ClassNotFoundException ex) {
+            this.logger.log(Level.SEVERE, null, ex);
 
-                this.logger.log(Level.SEVERE,"No MySQL JDBC driver found (that's bad)");
+            this.logger.log(Level.SEVERE,"No MySQL JDBC driver found (that's bad)");
 
-                return;
-            }
+            return;
+        }
 
-            try {
-                this.con = DriverManager.getConnection("jdbc:mysql://"+hostname+":"+port+"/"+database+"?autoReconnect=true",username,password);
-            } 
-            catch (SQLException ex) {
-                this.logger.log(Level.SEVERE, null, ex);
+        try {
+            this.con = DriverManager.getConnection("jdbc:mysql://"+hostname+":"+port+"/"+database+"?autoReconnect=true",username,password);
+        } 
+        catch (SQLException ex) {
+            this.logger.log(Level.SEVERE, null, ex);
 
-                System.out.println("Database connection failed!");
+            System.out.println("Database connection failed!");
 
-                return;
-            }
+            return;
+        }
 
-            if (this.con == null) {
-                this.logger.log(Level.SEVERE,"Unable to connect to the database");
+        if (this.con == null) {
+            this.logger.log(Level.SEVERE,"Unable to connect to the database");
 
-                return;
-            }
+            return;
+        }
 
-            try {             
-                ResultSet tableExistsResultSet = this.con.getMetaData().getTables(null, null, this.TBL_ITEMS, null);
+        try (ResultSet tableExistsResultSet = this.con.getMetaData().getTables(null, null, this.TBL_ITEMS, null)){             
+            if(!tableExistsResultSet.next()) {
+                // Generated from MySQL Workbench
+                String createAccountsTableQuery = "CREATE TABLE IF NOT EXISTS ###TABLE_ACCOUNTS### (  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,  `uuid` VARCHAR(36) NOT NULL,  `username` VARCHAR(16) NOT NULL,  PRIMARY KEY (`id`),  UNIQUE INDEX `uuid_UNIQUE` (`uuid` ASC))ENGINE = InnoDB;";
+                createAccountsTableQuery = createAccountsTableQuery.replaceAll("###TABLE_ACCOUNTS###", this.TBL_ACCOUNTS);
 
-                if(!tableExistsResultSet.next()) {
-                    // Generated from MySQL Workbench
-                    String createAccountsTableQuery = "CREATE TABLE IF NOT EXISTS ###TABLE_ACCOUNTS### (  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,  `uuid` VARCHAR(36) NOT NULL,  `username` VARCHAR(16) NOT NULL,  PRIMARY KEY (`id`),  UNIQUE INDEX `uuid_UNIQUE` (`uuid` ASC))ENGINE = InnoDB;";
-                    createAccountsTableQuery = createAccountsTableQuery.replaceAll("###TABLE_ACCOUNTS###", this.TBL_ACCOUNTS);
+                // Generated from MySQL Workbench
+                String createItemsTableQuery = "CREATE TABLE IF NOT EXISTS ###TABLE_ITEMS### (  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,  `seller_id` INT UNSIGNED NOT NULL,  `material` INT UNSIGNED NOT NULL,  `data` INT UNSIGNED NOT NULL,  `amount` INT UNSIGNED NOT NULL,  `item_data` TEXT NOT NULL,  `posted` DATETIME NOT NULL,  `price` DECIMAL(13,2) UNSIGNED NOT NULL,  `price_per_item` DECIMAL(13,2) UNSIGNED NOT NULL,  `buyer_id` INT UNSIGNED NULL,  `sold_at` DATETIME NULL,  `sold` BIT NOT NULL DEFAULT 0,  PRIMARY KEY (`id`),  INDEX `fk_items_player_account_idx` (`seller_id` ASC),  INDEX `material` (`material` ASC),  INDEX `fk_items_player_account1_idx` (`buyer_id` ASC),  CONSTRAINT `fk_items_player_account`    FOREIGN KEY (`seller_id`)    REFERENCES ###TABLE_ACCOUNTS### (`id`)    ON DELETE NO ACTION    ON UPDATE NO ACTION,  CONSTRAINT `fk_items_player_account1`    FOREIGN KEY (`buyer_id`)    REFERENCES ###TABLE_ACCOUNTS### (`id`)    ON DELETE NO ACTION    ON UPDATE NO ACTION)ENGINE = InnoDB;";
+                createItemsTableQuery = createItemsTableQuery.replaceAll("###TABLE_ACCOUNTS###", this.TBL_ACCOUNTS);
+                createItemsTableQuery = createItemsTableQuery.replaceAll("###TABLE_ITEMS###", this.TBL_ITEMS);
 
-                    // Generated from MySQL Workbench
-                    String createItemsTableQuery = "CREATE TABLE IF NOT EXISTS ###TABLE_ITEMS### (  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,  `seller_id` INT UNSIGNED NOT NULL,  `material` INT UNSIGNED NOT NULL,  `data` INT UNSIGNED NOT NULL,  `amount` INT UNSIGNED NOT NULL,  `item_data` TEXT NOT NULL,  `posted` DATETIME NOT NULL,  `price` DECIMAL(13,2) UNSIGNED NOT NULL,  `price_per_item` DECIMAL(13,2) UNSIGNED NOT NULL,  `buyer_id` INT UNSIGNED NULL,  `sold_at` DATETIME NULL,  `sold` BIT NOT NULL DEFAULT 0,  PRIMARY KEY (`id`),  INDEX `fk_items_player_account_idx` (`seller_id` ASC),  INDEX `material` (`material` ASC),  INDEX `fk_items_player_account1_idx` (`buyer_id` ASC),  CONSTRAINT `fk_items_player_account`    FOREIGN KEY (`seller_id`)    REFERENCES ###TABLE_ACCOUNTS### (`id`)    ON DELETE NO ACTION    ON UPDATE NO ACTION,  CONSTRAINT `fk_items_player_account1`    FOREIGN KEY (`buyer_id`)    REFERENCES ###TABLE_ACCOUNTS### (`id`)    ON DELETE NO ACTION    ON UPDATE NO ACTION)ENGINE = InnoDB;";
-                    createItemsTableQuery = createItemsTableQuery.replaceAll("###TABLE_ACCOUNTS###", this.TBL_ACCOUNTS);
-                    createItemsTableQuery = createItemsTableQuery.replaceAll("###TABLE_ITEMS###", this.TBL_ITEMS);
+                PreparedStatement createAccountsTable = this.con.prepareStatement(createAccountsTableQuery);
+                createAccountsTable.execute();
 
-                    PreparedStatement createAccountsTable = this.con.prepareStatement(createAccountsTableQuery);
-                    createAccountsTable.execute();
-
-                    PreparedStatement createItemsTable = this.con.prepareStatement(createItemsTableQuery);
-                    createItemsTable.execute();
-                }
-            }
-            catch (SQLException ex) {
-                this.logger.log(Level.SEVERE, null, ex);
-
-                this.con = null;
+                PreparedStatement createItemsTable = this.con.prepareStatement(createItemsTableQuery);
+                createItemsTable.execute();
             }
         }
-        else{
-            try {
-                Class.forName("org.sqlite.JDBC");
-            } 
-            catch (ClassNotFoundException ex) {
-                this.logger.log(Level.SEVERE, null, ex);
+        catch (SQLException ex) {
+            this.logger.log(Level.SEVERE, null, ex);
 
-                this.logger.log(Level.SEVERE,"No SQLITE JDBC driver found (that's bad)");
-
-                return;
-            }
-            
-            if(!plugin.getDataFolder().exists()) {
-                plugin.getDataFolder().mkdir();
-            }
-            
-            File sqliteFile = new File(plugin.getDataFolder().getAbsolutePath() + File.separator + "LonelyShop.db");
-            
-            try {                
-                this.con = DriverManager.getConnection("jdbc:sqlite:" +sqliteFile.getAbsolutePath());
-            } 
-            catch (SQLException ex) {
-                this.logger.log(Level.SEVERE, null, ex);
-
-                System.out.println("Database connection failed!");
-
-                return;
-            }
-
-            if (this.con == null) {
-                this.logger.log(Level.SEVERE,"Unable to connect to the database");
-
-                return;
-            }
-            try {             
-                ResultSet tableExistsResultSet = this.con.getMetaData().getTables(null, null, this.TBL_ITEMS, null);
-
-                if(!tableExistsResultSet.next()) {
-                    // Generated from MySQL Workbench
-                    String createAccountsTableQuery = "CREATE TABLE IF NOT EXISTS ###TABLE_ACCOUNTS### (  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,  `uuid` VARCHAR(36) NOT NULL,  `username` VARCHAR(16) NOT NULL,  PRIMARY KEY (`id`),  UNIQUE INDEX `uuid_UNIQUE` (`uuid` ASC))ENGINE = InnoDB;";
-                    createAccountsTableQuery = createAccountsTableQuery.replaceAll("###TABLE_ACCOUNTS###", this.TBL_ACCOUNTS);
-
-                    // Generated from MySQL Workbench
-                    String createItemsTableQuery = "CREATE TABLE IF NOT EXISTS ###TABLE_ITEMS### (  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,  `seller_id` INT UNSIGNED NOT NULL,  `material` INT UNSIGNED NOT NULL,  `data` INT UNSIGNED NOT NULL,  `amount` INT UNSIGNED NOT NULL,  `item_data` TEXT NOT NULL,  `posted` DATETIME NOT NULL,  `price` DECIMAL(13,2) UNSIGNED NOT NULL,  `price_per_item` DECIMAL(13,2) UNSIGNED NOT NULL,  `buyer_id` INT UNSIGNED NULL,  `sold_at` DATETIME NULL,  `sold` BIT NOT NULL DEFAULT 0,  PRIMARY KEY (`id`),  INDEX `fk_items_player_account_idx` (`seller_id` ASC),  INDEX `material` (`material` ASC),  INDEX `fk_items_player_account1_idx` (`buyer_id` ASC),  CONSTRAINT `fk_items_player_account`    FOREIGN KEY (`seller_id`)    REFERENCES ###TABLE_ACCOUNTS### (`id`)    ON DELETE NO ACTION    ON UPDATE NO ACTION,  CONSTRAINT `fk_items_player_account1`    FOREIGN KEY (`buyer_id`)    REFERENCES ###TABLE_ACCOUNTS### (`id`)    ON DELETE NO ACTION    ON UPDATE NO ACTION)ENGINE = InnoDB;";
-                    createItemsTableQuery = createItemsTableQuery.replaceAll("###TABLE_ACCOUNTS###", this.TBL_ACCOUNTS);
-                    createItemsTableQuery = createItemsTableQuery.replaceAll("###TABLE_ITEMS###", this.TBL_ITEMS);
-
-                    PreparedStatement createAccountsTable = this.con.prepareStatement(createAccountsTableQuery);
-                    createAccountsTable.execute();
-
-                    PreparedStatement createItemsTable = this.con.prepareStatement(createItemsTableQuery);
-                    createItemsTable.execute();
-                }
-            }
-            catch (SQLException ex) {
-                this.logger.log(Level.SEVERE, null, ex);
-
-                this.con = null;
-            }
+            this.con = null;
         }
-        
     }
     
     public synchronized PlayerInventoryAccount getPlayerAccount(Player player) {

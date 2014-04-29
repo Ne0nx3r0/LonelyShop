@@ -18,10 +18,7 @@ sell_limits:
   
 # database settings
 database: 
-#         mysql or sqlite
-    type: sqlite
     prefix: ls_
-# not required if using sqlite
     hostname: localhost
     port: 3306
     database: lonelyshop
