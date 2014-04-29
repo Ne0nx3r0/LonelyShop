@@ -1,9 +1,13 @@
 # maximum number of items a player can have for sale
 #
-# nodes are checked like lonelyshop.max.citizen
+# you can add your own
 #
-# limits:
-#     citizen: 20
+# sell_limits:
+#     your_mom: 250
+#
+# node would be lonelyshop.max.your_mom and users with that perm
+# could sell 250 items, which is shockingly close what the scale showed
+# before yo fat ugly momma broke it
 #
 sell_limits:
     newbie: 10
@@ -14,7 +18,7 @@ sell_limits:
   
 # database settings
 database: 
-# mysql or sqlite
+#         mysql or sqlite
     type: sqlite
     prefix: ls_
 # not required if using sqlite
